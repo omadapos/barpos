@@ -1,0 +1,126 @@
+:root {
+  /* Fondos — blancos y grises muy claros */
+  --bg: #ffffff;
+  --bg2: #f8fafc;
+  --bg3: #f1f5f9;
+  --bg4: #e2e8f0;
+
+  /* Bordes */
+  --border: #e2e8f0;
+  --border2: #cbd5e1;
+
+  /* Marca — verde esmeralda vivo */
+  --green: #047857;
+  --green2: #10b981;
+  --green3: #059669;
+  --green-dim: #d1fae5;
+  --green-pale: #ecfdf5;
+
+  /* Texto — oscuro sobre claro */
+  --text: #0f172a;
+  --text2: #475569;
+  --text3: #94a3b8;
+
+  /* Semánticos vivos */
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --red-pale: #fef2f2;
+
+  /* Acento azul vivo (tarjetas, links) */
+  --blue: #2563eb;
+  --cyan: #06b6d4;
+
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(8px);
+  }
+  60% {
+    transform: translateX(-8px);
+  }
+  80% {
+    transform: translateX(8px);
+  }
+}
+
+.shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+.pressable:active {
+  transform: scale(0.96);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-enter {
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.item-enter {
+  animation: slideIn 0.12s ease-out;
+}
+
+@keyframes pulse-green {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.08);
+  }
+}
+
+.dot-occupied {
+  animation: pulse-green 2s infinite;
+}
+
+.scrollbar-emerald::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+.scrollbar-emerald::-webkit-scrollbar-track {
+  background: var(--bg3);
+  border-radius: 2px;
+}
+.scrollbar-emerald::-webkit-scrollbar-thumb {
+  background: var(--green2);
+  border-radius: 2px;
+}
