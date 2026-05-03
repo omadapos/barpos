@@ -1,13 +1,21 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+const DEFAULT_REMOTE_API_BASE = 'https://barpos.omadapos.com';
+
+function normalizeApiBaseUrl(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api$/, '');
+}
+
 /**
  * Origen del API (sin /api). Por defecto producción Omada.
  * Prioridad: API_URL al lanzar el .exe → VITE_API_URL en el proceso → remoto.
  */
-const apiBaseUrl =
-  process.env.API_URL ||
-  process.env.VITE_API_URL ||
-  'https://barpos.omadapos.com';
+const apiBaseUrl = normalizeApiBaseUrl(
+  process.env.API_URL || process.env.VITE_API_URL || DEFAULT_REMOTE_API_BASE
+);
 
 /**
  * Evita promesas rechazadas en el renderer por fallos de IPC (p. ej. "Error invoking remote method").

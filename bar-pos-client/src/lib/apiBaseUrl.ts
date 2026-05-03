@@ -6,6 +6,10 @@
  */
 export const DEFAULT_REMOTE_API_BASE = 'https://barpos.omadapos.com';
 
+function normalizeApiBaseURL(value: string): string {
+  return value.trim().replace(/\/+$/, '').replace(/\/api$/, '');
+}
+
 /**
  * Resuelve la base URL del servidor (solo host, sin `/api`).
  *
@@ -18,17 +22,17 @@ export function getApiBaseURL(): string {
   const fromVite = import.meta.env.VITE_API_URL?.trim();
 
   if (import.meta.env.DEV) {
-    if (fromVite) return fromVite.replace(/\/$/, '');
+    if (fromVite) return normalizeApiBaseURL(fromVite);
     if (import.meta.env.VITE_USE_LOCAL_PROXY === 'true') return '';
     return remote;
   }
 
   if (typeof window !== 'undefined' && window.electronEnv?.isElectron) {
     const pre = window.electronEnv.apiBaseUrl?.trim();
-    if (pre) return pre.replace(/\/$/, '');
+    if (pre) return normalizeApiBaseURL(pre);
     return remote;
   }
 
-  if (fromVite) return fromVite.replace(/\/$/, '');
+  if (fromVite) return normalizeApiBaseURL(fromVite);
   return remote;
 }

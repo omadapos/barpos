@@ -14,7 +14,4 @@ export const tablesApi = {
 
   toggle: (id: number) =>
     api.patch<ApiResponse<Table>>(`/api/tables/${id}/toggle`).then((r) => r.data.data),
-
-  delete: (id: number) =>
-    api.delete<ApiResponse<unknown>>(`/api/tables/${id}`).then((r) => r.data.data),
 };

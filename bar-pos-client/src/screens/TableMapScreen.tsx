@@ -50,7 +50,7 @@ export default function TableMapScreen({ walkInTick, onNavigateOrder }: Props) {
       if (occupied) {
         order = await ordersApi.getByTable(table.id);
       } else {
-        const created = await ordersApi.create({ tableId: table.id, tableName: table.name });
+        const created = await ordersApi.create({ tableId: table.id, notes: table.name });
         order = await hydrateOrder(created);
       }
       setCurrentOrder(order);
@@ -80,7 +80,7 @@ export default function TableMapScreen({ walkInTick, onNavigateOrder }: Props) {
     try {
       const created = await ordersApi.create({
         tableId: null,
-        tableName: 'Ticket Directo',
+        notes: 'Ticket Directo',
       });
       const order = await hydrateOrder(created);
       setCurrentOrder(order);

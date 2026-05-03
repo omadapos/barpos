@@ -44,9 +44,6 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     if (!currentOrder) return;
     await ordersApi.addItem(currentOrder.id, {
       productId: product.id,
-      productName: product.name,
-      categoryName: activeCategory?.name ?? '',
-      unitPrice: product.price,
       quantity: 1,
     });
     await get().refreshOrder();
@@ -57,11 +54,8 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     if (!currentOrder) return;
     await ordersApi.addItem(currentOrder.id, {
       productId: product.id,
-      productName: product.name,
-      categoryName: activeCategory?.name ?? '',
-      measureName: measure.measureName,
-      unitPrice: measure.price,
       quantity: 1,
+      notes: measure.measureName,
     });
     get().closeMeasureModal();
     await get().refreshOrder();

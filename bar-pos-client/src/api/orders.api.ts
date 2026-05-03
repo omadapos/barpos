@@ -12,18 +12,15 @@ export const ordersApi = {
   getById: (id: number) =>
     api.get<ApiResponse<Order>>(`/api/orders/${id}`).then((r) => r.data.data),
 
-  create: (body: { tableId?: number | null; tableName?: string }) =>
+  create: (body: { tableId?: number | null; notes?: string }) =>
     api.post<ApiResponse<Order>>('/api/orders', body).then((r) => r.data.data),
 
   addItem: (
     orderId: number,
     item: {
       productId: number;
-      productName: string;
-      categoryName: string;
-      measureName?: string;
-      unitPrice: number;
       quantity: number;
+      notes?: string;
     }
   ) =>
     api.post<ApiResponse<Order>>(`/api/orders/${orderId}/items`, item).then((r) => r.data.data),
@@ -40,7 +37,7 @@ export const ordersApi = {
 
   pay: (orderId: number, paymentMethod: 'cash' | 'card') =>
     api
-      .post<ApiResponse<Order>>(`/api/orders/${orderId}/pay`, { paymentMethod })
+      .post<ApiResponse<Order>>(`/api/orders/${orderId}/pay`, { method: paymentMethod })
       .then((r) => r.data.data),
 
   cancel: (orderId: number) =>
