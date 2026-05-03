@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { format, startOfDay } from 'date-fns';
+import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { LogOut, Printer, X } from 'lucide-react';
-import { reportsApi } from '@/api/reports.api';
 import { useConnectionStore } from '@/store/useConnectionStore';
 import PrinterSettingsModal from '@/components/PrinterSettingsModal';
 
@@ -30,7 +28,6 @@ export default function PosTopBar({
   main,
   orderContext,
   onGoMap,
-  onGoReports,
   onQuickSale,
   session,
 }: Props) {
@@ -43,20 +40,10 @@ export default function PosTopBar({
     return () => window.clearInterval(id);
   }, []);
 
-  const todayStr = useMemo(
-    () => format(startOfDay(new Date()), 'yyyy-MM-dd'),
-    []
-  );
 
-  const todaySales = useQuery({
-    queryKey: ['pos', 'todaySales', todayStr],
-    queryFn: () => reportsApi.getSummary(todayStr, todayStr),
-    staleTime: 60_000,
-  });
 
   const tabMesas = main === 'map';
   const tabCaja = main === 'order' && orderContext === 'walkin';
-  const tabRep = main === 'reports';
 
   return (
     <header className="app-drag flex h-[52px] min-h-[52px] w-full min-w-0 shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--bg2)] px-2 md:gap-3 md:px-4">
@@ -78,35 +65,22 @@ export default function PosTopBar({
           <button
             type="button"
             onClick={onGoMap}
-            className={`rounded-[var(--radius)] px-2 py-2 text-xs font-semibold transition sm:px-3 sm:text-sm ${
-              tabMesas
+            className={`rounded-[var(--radius)] px-2 py-2 text-xs font-semibold transition sm:px-3 sm:text-sm ${tabMesas
                 ? 'border border-[var(--green2)] bg-[var(--green-dim)] text-[var(--green)]'
                 : 'border border-transparent text-[var(--text3)] hover:text-[var(--text2)]'
-            }`}
+              }`}
           >
             Mesas
           </button>
           <button
             type="button"
             onClick={onQuickSale}
-            className={`rounded-[var(--radius)] px-2 py-2 text-xs font-semibold transition sm:px-3 sm:text-sm ${
-              tabCaja
+            className={`rounded-[var(--radius)] px-2 py-2 text-xs font-semibold transition sm:px-3 sm:text-sm ${tabCaja
                 ? 'border border-[var(--green2)] bg-[var(--green-dim)] text-[var(--green)]'
                 : 'border border-transparent text-[var(--text3)] hover:text-[var(--text2)]'
-            }`}
+              }`}
           >
             Caja rápida
-          </button>
-          <button
-            type="button"
-            onClick={onGoReports}
-            className={`rounded-[var(--radius)] px-2 py-2 text-xs font-semibold transition sm:px-3 sm:text-sm ${
-              tabRep
-                ? 'border border-[var(--green2)] bg-[var(--green-dim)] text-[var(--green)]'
-                : 'border border-transparent text-[var(--text3)] hover:text-[var(--text2)]'
-            }`}
-          >
-            Reportes
           </button>
         </nav>
       </div>
@@ -122,22 +96,9 @@ export default function PosTopBar({
 
         <div title={online ? 'Conectado' : 'Sin conexión'}>
           <span
-            className={`block h-2 w-2 rounded-full ${
-              online ? 'bg-[var(--green2)] dot-occupied' : 'bg-[var(--red)]'
-            }`}
+            className={`block h-2 w-2 rounded-full ${online ? 'bg-[var(--green2)] dot-occupied' : 'bg-[var(--red)]'
+              }`}
           />
-        </div>
-
-        <div className="hidden max-w-[128px] truncate text-[11px] text-[var(--text2)] lg:block xl:max-w-[160px]">
-          Ventas hoy:{' '}
-          <span className="font-semibold text-[var(--green)]">
-            {todaySales.isLoading
-              ? '…'
-              : `$${(todaySales.data?.totalSales ?? 0).toLocaleString('es-MX', {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })}`}
-          </span>
         </div>
 
         <div
