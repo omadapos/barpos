@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
+import { X, Save, Settings } from 'lucide-react';
 import { useOrderStore } from '@/store/useOrderStore';
 
 export default function TaxSettingsModal({ open, onClose }) {
@@ -16,9 +22,7 @@ export default function TaxSettingsModal({ open, onClose }) {
   }, [open, taxPercent, loadSettings]);
 
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape' && open) onClose();
-    };
+    const onKey = (e) => { if (e.key === 'Escape' && open) onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
@@ -32,31 +36,84 @@ export default function TaxSettingsModal({ open, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-slate-600 bg-slate-900 p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Impuesto (%)</h2>
-          <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-slate-800">
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-        <input
-          type="number"
-          min={0}
-          max={100}
-          step="0.01"
-          className="mb-4 min-h-[52px] w-full rounded-xl border border-slate-600 bg-slate-800 px-4 text-xl"
-          value={val}
-          onChange={(e) => setVal(e.target.value)}
-        />
-        <button
-          type="button"
-          onClick={save}
-          className="min-h-[52px] w-full rounded-xl bg-indigo-600 text-lg font-semibold hover:bg-indigo-500"
+    <Box
+      onClick={onClose}
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1350,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: 'rgba(15, 23, 42, 0.7)',
+        backdropFilter: 'blur(4px)',
+        p: 2,
+      }}
+    >
+      <Box
+        onClick={(e) => e.stopPropagation()}
+        sx={{
+          width: '100%',
+          maxWidth: 380,
+          bgcolor: 'background.paper',
+          borderRadius: 4,
+          boxShadow: 24,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            p: 3,
+            bgcolor: 'primary.main',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
         >
-          Guardar
-        </button>
-      </div>
-    </div>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <Settings size={22} />
+            <Typography variant="h6" sx={{ fontWeight: 900 }}>
+              Impuesto (%)
+            </Typography>
+          </Stack>
+          <IconButton onClick={onClose} sx={{ color: 'white' }}>
+            <X size={24} />
+          </IconButton>
+        </Box>
+
+        {/* Form */}
+        <Box sx={{ p: 4 }}>
+          <Stack spacing={3}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Porcentaje de impuesto"
+              value={val}
+              onChange={(e) => setVal(e.target.value)}
+              autoFocus
+              slotProps={{
+                input: {
+                  sx: { fontWeight: 800, fontSize: '1.25rem', borderRadius: 3 },
+                  inputMode: 'decimal',
+                },
+              }}
+              inputProps={{ min: 0, max: 100, step: 0.01 }}
+            />
+            <Button
+              fullWidth
+              variant="contained"
+              color="primary"
+              onClick={save}
+              startIcon={<Save size={18} />}
+              sx={{ borderRadius: 3, py: 1.5, fontWeight: 800 }}
+            >
+              Guardar
+            </Button>
+          </Stack>
+        </Box>
+      </Box>
+    </Box>
   );
 }

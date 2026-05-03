@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart3, Settings2, Armchair } from 'lucide-react';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import { BarChart3, Settings2, Armchair, Ticket, LogOut } from 'lucide-react';
 import Navbar from '@/components/Navbar.jsx';
 import TableCard from '@/components/TableCard.jsx';
 import TableManagerModal from '@/components/TableManagerModal.jsx';
@@ -7,15 +10,13 @@ import TaxSettingsModal from '@/components/TaxSettingsModal.jsx';
 import { useTableStore } from '@/store/useTableStore';
 import { useOrderStore } from '@/store/useOrderStore';
 
-export default function TableMapScreen({ onOpenOrder, onReports }) {
+export default function TableMapScreen({ onOpenOrder, onReports, onLogout }) {
   const { tables, openOrders, openOrdersList, refreshAll } = useTableStore();
   const clearLocalOrder = useOrderStore((s) => s.clearLocalOrder);
   const [managerOpen, setManagerOpen] = useState(false);
   const [taxOpen, setTaxOpen] = useState(false);
 
-  useEffect(() => {
-    refreshAll();
-  }, [refreshAll]);
+  useEffect(() => { refreshAll(); }, [refreshAll]);
 
   const activeTables = (tables || []).filter((t) => t.active);
 
@@ -23,9 +24,7 @@ export default function TableMapScreen({ onOpenOrder, onReports }) {
     const o = (openOrdersList || []).find(
       (x) => x.table_id === tableId && x.status === 'open'
     );
-    return o
-      ? { orderId: o.id, itemCount: o.item_count, total: o.total }
-      : null;
+    return o ? { orderId: o.id, itemCount: o.item_count, total: o.total } : null;
   };
 
   const openTable = async (table) => {
@@ -55,41 +54,89 @@ export default function TableMapScreen({ onOpenOrder, onReports }) {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-slate-950">
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, bgcolor: 'background.default' }}>
       <Navbar
         title="Bar POS"
         right={
           <>
-            <button
-              type="button"
+            <Button
+              variant="outlined"
+              color="inherit"
               onClick={() => setTaxOpen(true)}
-              className="flex min-h-[48px] items-center gap-2 rounded-xl bg-slate-800 px-4 font-semibold hover:bg-slate-700"
+              startIcon={<Settings2 size={18} />}
+              sx={{
+                borderRadius: 3,
+                py: 1.2,
+                fontWeight: 800,
+                borderColor: 'divider',
+                color: 'text.secondary',
+                '&:hover': {
+                  borderColor: 'primary.light',
+                  bgcolor: 'rgba(99, 102, 241, 0.04)',
+                },
+              }}
             >
-              <Settings2 className="h-5 w-5" />
               Impuesto
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
               onClick={onReports}
-              className="flex min-h-[48px] items-center gap-2 rounded-xl bg-slate-800 px-4 font-semibold hover:bg-slate-700"
+              startIcon={<BarChart3 size={18} />}
+              sx={{
+                borderRadius: 3,
+                py: 1.2,
+                fontWeight: 800,
+                borderColor: 'divider',
+                color: 'text.secondary',
+                '&:hover': {
+                  borderColor: 'primary.light',
+                  bgcolor: 'rgba(99, 102, 241, 0.04)',
+                },
+              }}
             >
-              <BarChart3 className="h-5 w-5" />
               Reportes
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
               onClick={() => setManagerOpen(true)}
-              className="flex min-h-[48px] items-center gap-2 rounded-xl bg-indigo-700 px-4 font-semibold hover:bg-indigo-600"
+              startIcon={<Armchair size={18} />}
+              sx={{ borderRadius: 3, py: 1.2, fontWeight: 800 }}
             >
-              <Armchair className="h-5 w-5" />
               Gestionar mesas
-            </button>
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={onLogout}
+              startIcon={<LogOut size={18} />}
+              sx={{
+                borderRadius: 3,
+                py: 1.2,
+                fontWeight: 800,
+                '&:hover': {
+                  bgcolor: 'rgba(239, 68, 68, 0.06)',
+                },
+              }}
+            >
+              Salir
+            </Button>
           </>
         }
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-6">
-        <div className="mx-auto grid max-w-6xl grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
+      {/* Table Grid */}
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 3, md: 5 } }}>
+        <Box
+          sx={{
+            mx: 'auto',
+            maxWidth: 1200,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
+            gap: 2.5,
+          }}
+        >
           {activeTables.map((t) => {
             const occ = !!openOrders[t.id];
             const m = metaForTable(t.id);
@@ -105,23 +152,46 @@ export default function TableMapScreen({ onOpenOrder, onReports }) {
               />
             );
           })}
-        </div>
-      </div>
+        </Box>
+      </Box>
 
-      <div className="shrink-0 border-t border-slate-800 bg-slate-900 p-4">
-        <div className="mx-auto max-w-6xl">
-          <button
-            type="button"
+      {/* Walk-in Button */}
+      <Box
+        sx={{
+          flexShrink: 0,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          p: 3,
+          boxShadow: '0 -2px 8px rgba(15,23,42,0.04)',
+        }}
+      >
+        <Box sx={{ mx: 'auto', maxWidth: 1200 }}>
+          <Button
+            fullWidth
+            variant="contained"
             onClick={walkIn}
-            className="min-h-[80px] w-full rounded-2xl bg-fuchsia-700 text-xl font-bold shadow-lg hover:bg-fuchsia-600"
+            startIcon={<Ticket size={22} />}
+            sx={{
+              borderRadius: 4,
+              py: 2.5,
+              fontWeight: 900,
+              fontSize: '1.15rem',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)',
+              boxShadow: '0 4px 16px rgba(139, 92, 246, 0.25)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)',
+                boxShadow: '0 6px 24px rgba(139, 92, 246, 0.35)',
+              },
+            }}
           >
-            🎫 Ticket directo
-          </button>
-        </div>
-      </div>
+            Ticket directo
+          </Button>
+        </Box>
+      </Box>
 
       <TableManagerModal open={managerOpen} onClose={() => setManagerOpen(false)} />
       <TaxSettingsModal open={taxOpen} onClose={() => setTaxOpen(false)} />
-    </div>
+    </Box>
   );
 }

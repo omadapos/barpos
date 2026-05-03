@@ -1,22 +1,67 @@
 import React from 'react';
+import Box from '@mui/material/Box';
+import ButtonBase from '@mui/material/ButtonBase';
+import Typography from '@mui/material/Typography';
 import { formatMoney } from '@/lib/format';
 
 export default function ProductGrid({ products, onProduct, isBottleCategory }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+        gap: 2,
+      }}
+    >
       {(products || []).map((p) => (
-        <button
+        <ButtonBase
           key={p.id}
-          type="button"
           onClick={() => onProduct(p)}
-          className="flex min-h-[80px] min-w-[140px] flex-col items-center justify-center gap-1 rounded-xl border border-slate-600 bg-slate-800 px-3 py-4 text-center shadow hover:border-indigo-500 hover:bg-slate-700"
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 0.75,
+            minHeight: 90,
+            px: 2,
+            py: 2.5,
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+            boxShadow: '0 1px 3px rgba(15,23,42,0.04)',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              borderColor: 'primary.light',
+              bgcolor: 'rgba(99, 102, 241, 0.04)',
+              transform: 'translateY(-1px)',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.08)',
+            },
+          }}
         >
-          <span className="text-base font-semibold leading-tight text-white">{p.name}</span>
-          <span className="text-lg font-bold text-emerald-400">
+          <Typography
+            sx={{
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              color: 'text.primary',
+              textAlign: 'center',
+              lineHeight: 1.3,
+            }}
+          >
+            {p.name}
+          </Typography>
+          <Typography
+            sx={{
+              fontWeight: 900,
+              fontSize: '1.05rem',
+              color: 'success.main',
+            }}
+          >
             {isBottleCategory ? 'Medidas' : formatMoney(p.price)}
-          </span>
-        </button>
+          </Typography>
+        </ButtonBase>
       ))}
-    </div>
+    </Box>
   );
 }

@@ -1,4 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+import IconButton from '@mui/material/IconButton';
+import ButtonBase from '@mui/material/ButtonBase';
 import { X } from 'lucide-react';
 import { formatMoney } from '@/lib/format';
 
@@ -30,42 +35,105 @@ export default function MeasureModal({ product, open, onClose, onSelectMeasure }
       const list = await window.electronAPI.getMeasures(product.id);
       if (!cancelled) setMeasures(list || []);
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [open, product]);
 
   if (!open || !product) return null;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 p-4">
-      <div className="w-full max-w-2xl rounded-2xl border border-slate-600 bg-slate-900 p-6 shadow-2xl">
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <h2 className="text-2xl font-bold text-white">{product.name}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 hover:bg-slate-800"
-            aria-label="Cerrar"
+    <Box
+      onClick={onClose}
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1300,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: 'rgba(15, 23, 42, 0.7)',
+        backdropFilter: 'blur(4px)',
+        p: 2,
+      }}
+    >
+      <Box
+        onClick={(e) => e.stopPropagation()}
+        sx={{
+          width: '100%',
+          maxWidth: 600,
+          bgcolor: 'background.paper',
+          borderRadius: 4,
+          boxShadow: 24,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            p: 3,
+            bgcolor: 'secondary.main',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 900 }}>
+            {product.name}
+          </Typography>
+          <IconButton onClick={onClose} sx={{ color: 'white' }}>
+            <X size={24} />
+          </IconButton>
+        </Box>
+
+        {/* Measures Grid */}
+        <Box sx={{ p: 3 }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 2,
+            }}
           >
-            <X className="h-7 w-7" />
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          {measures.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => onSelectMeasure(m)}
-              className="flex min-h-[120px] min-w-[200px] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-violet-500/40 bg-violet-950/80 py-6 text-xl font-bold text-white shadow-lg hover:border-violet-400 hover:bg-violet-900/80"
-            >
-              <span className="text-4xl">{measureEmoji[m.measure_name] || '🥃'}</span>
-              <span>{m.measure_name}</span>
-              <span className="text-2xl text-emerald-400">{formatMoney(m.price)}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
+            {measures.map((m) => (
+              <ButtonBase
+                key={m.id}
+                onClick={() => onSelectMeasure(m)}
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
+                  minHeight: 120,
+                  py: 3,
+                  borderRadius: 4,
+                  border: '2px solid',
+                  borderColor: 'secondary.light',
+                  bgcolor: 'rgba(139, 92, 246, 0.06)',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    borderColor: 'secondary.main',
+                    bgcolor: 'rgba(139, 92, 246, 0.12)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 20px rgba(139, 92, 246, 0.15)',
+                  },
+                }}
+              >
+                <Typography sx={{ fontSize: '2.5rem' }}>
+                  {measureEmoji[m.measure_name] || '🥃'}
+                </Typography>
+                <Typography sx={{ fontWeight: 800, color: 'text.primary', fontSize: '1.1rem' }}>
+                  {m.measure_name}
+                </Typography>
+                <Typography sx={{ fontWeight: 900, color: 'success.main', fontSize: '1.25rem' }}>
+                  {formatMoney(m.price)}
+                </Typography>
+              </ButtonBase>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }

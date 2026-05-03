@@ -1,115 +1,101 @@
 import React, { useCallback, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import ButtonBase from '@mui/material/ButtonBase';
+import Stack from '@mui/material/Stack';
 import { Users } from 'lucide-react';
 import { formatMoney } from '@/lib/format';
 
 export default function TableCard({
-  table,
-  occupied,
-  itemCount,
-  total,
-  onOpen,
-  onViewOrder,
+  table, occupied, itemCount, total, onOpen, onViewOrder,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const longPressTimer = useRef(null);
-  const menuRef = useRef(null);
 
   const clearTimer = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   };
 
-  const openMenu = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setMenuOpen(true);
-  }, []);
-
-  const onPointerDown = () => {
-    clearTimer();
-    longPressTimer.current = setTimeout(() => {
-      setMenuOpen(true);
-    }, 600);
-  };
-
-  const onPointerUp = () => {
-    clearTimer();
-  };
-
-  const base =
-    'relative flex min-h-[100px] cursor-pointer select-none flex-col justify-between rounded-xl border-2 p-4 text-left shadow-lg transition hover:brightness-110 active:scale-[0.99]';
-  const avail =
-    'border-emerald-600/50 bg-gradient-to-br from-emerald-900/80 to-emerald-950/90';
-  const occ =
-    'border-amber-500/60 bg-gradient-to-br from-amber-900/80 to-amber-950/90';
+  const openMenu = useCallback((e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(true); }, []);
+  const onPointerDown = () => { clearTimer(); longPressTimer.current = setTimeout(() => setMenuOpen(true), 600); };
+  const onPointerUp = () => clearTimer();
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        className={`${base} ${occupied ? occ : avail} w-full`}
+    <Box sx={{ position: 'relative' }}>
+      <ButtonBase
         onClick={() => onOpen()}
         onContextMenu={openMenu}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
         onPointerLeave={onPointerUp}
         onPointerCancel={onPointerUp}
+        sx={{
+          width: '100%', display: 'flex', flexDirection: 'column',
+          justifyContent: 'space-between', alignItems: 'stretch', textAlign: 'left',
+          minHeight: 110, p: 2.5, borderRadius: 4,
+          border: '2px solid',
+          borderColor: occupied ? 'warning.light' : 'success.light',
+          bgcolor: occupied ? 'rgba(251, 191, 36, 0.08)' : 'rgba(16, 185, 129, 0.06)',
+          boxShadow: '0 2px 8px rgba(15,23,42,0.06)',
+          transition: 'all 0.2s ease', cursor: 'pointer',
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            boxShadow: occupied
+              ? '0 6px 20px rgba(245, 158, 11, 0.15)'
+              : '0 6px 20px rgba(16, 185, 129, 0.12)',
+          },
+          '&:active': { transform: 'scale(0.98)' },
+        }}
       >
-        <div className="flex items-start justify-between gap-2">
-          <span className="text-xl font-semibold text-white">{table.name}</span>
-          <span className="flex items-center gap-1 text-sm text-slate-200">
-            <Users className="h-4 w-4" />
-            {table.capacity}
-          </span>
-        </div>
+        <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'text.primary', fontSize: '1.1rem' }}>
+            {table.name}
+          </Typography>
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', color: 'text.secondary' }}>
+            <Users size={16} />
+            <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>{table.capacity}</Typography>
+          </Stack>
+        </Stack>
+
         {occupied ? (
-          <div className="mt-2 text-sm text-amber-100">
-            <div>{itemCount ?? 0} artículos</div>
-            <div className="text-lg font-bold text-white">{formatMoney(total)}</div>
-          </div>
+          <Box sx={{ mt: 1.5 }}>
+            <Typography variant="body2" sx={{ color: 'warning.dark', fontWeight: 600 }}>{itemCount ?? 0} artículos</Typography>
+            <Typography variant="h6" sx={{ fontWeight: 900, color: 'text.primary', mt: 0.25 }}>{formatMoney(total)}</Typography>
+          </Box>
         ) : (
-          <div className="mt-2 text-sm font-medium text-emerald-200">Disponible</div>
+          <Typography variant="body2" sx={{ mt: 1.5, fontWeight: 700, color: 'success.main' }}>Disponible</Typography>
         )}
-      </button>
+      </ButtonBase>
 
       {menuOpen && (
         <>
-          <button
-            type="button"
-            className="fixed inset-0 z-40 cursor-default bg-black/40"
-            aria-label="Cerrar menú"
+          <Box
             onClick={() => setMenuOpen(false)}
+            sx={{ position: 'fixed', inset: 0, zIndex: 40, bgcolor: 'rgba(15,23,42,0.3)', backdropFilter: 'blur(2px)' }}
           />
-          <div
-            ref={menuRef}
-            className="absolute right-0 top-full z-50 mt-1 min-w-[200px] overflow-hidden rounded-lg border border-slate-600 bg-slate-800 py-1 shadow-xl"
-          >
-            <button
-              type="button"
-              className="block w-full px-4 py-3 text-left text-sm hover:bg-slate-700"
-              onClick={() => {
-                setMenuOpen(false);
-                onViewOrder();
-              }}
+          <Paper elevation={8} sx={{
+            position: 'absolute', right: 0, top: '100%', zIndex: 50, mt: 0.5,
+            minWidth: 200, borderRadius: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden',
+          }}>
+            <ButtonBase
+              onClick={() => { setMenuOpen(false); onViewOrder(); }}
+              sx={{ display: 'block', width: '100%', px: 2.5, py: 1.5, textAlign: 'left',
+                fontSize: '0.9rem', fontWeight: 600, color: 'text.primary', '&:hover': { bgcolor: 'action.hover' } }}
             >
               Ver orden
-            </button>
-            <button
-              type="button"
-              className="block w-full px-4 py-3 text-left text-sm text-slate-400 hover:bg-slate-700"
-              onClick={() => {
-                setMenuOpen(false);
-                toast('Transferencia de mesa disponible en versión 2');
-              }}
+            </ButtonBase>
+            <ButtonBase
+              onClick={() => { setMenuOpen(false); toast('Transferencia de mesa disponible en versión 2'); }}
+              sx={{ display: 'block', width: '100%', px: 2.5, py: 1.5, textAlign: 'left',
+                fontSize: '0.9rem', fontWeight: 500, color: 'text.secondary', '&:hover': { bgcolor: 'action.hover' } }}
             >
               Transferir mesa (v2)
-            </button>
-          </div>
+            </ButtonBase>
+          </Paper>
         </>
       )}
-    </div>
+    </Box>
   );
 }
