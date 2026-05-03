@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Printer, X } from 'lucide-react';
+import { LogOut, Printer, X } from 'lucide-react';
 import { reportsApi } from '@/api/reports.api';
 import { useConnectionStore } from '@/store/useConnectionStore';
 import PrinterSettingsModal from '@/components/PrinterSettingsModal';
@@ -59,9 +59,10 @@ export default function PosTopBar({
   const tabRep = main === 'reports';
 
   return (
-    <header className="app-drag flex h-[52px] min-h-[52px] shrink-0 items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--bg2)] px-2 md:gap-3 md:px-4">
-      <div className="app-no-drag flex min-w-0 items-center gap-2 md:gap-3">
-        <div className="flex items-center gap-2 rounded-[var(--radius)] border border-[var(--border2)] bg-[var(--bg3)] px-2 py-1">
+    <header className="app-drag flex h-[52px] min-h-[52px] w-full min-w-0 shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--bg2)] px-2 md:gap-3 md:px-4">
+      {/* Izquierda: logo + tabs; puede hacer scroll horizontal si no cabe (body tiene overflow-x hidden). */}
+      <div className="app-no-drag flex min-w-0 flex-1 items-center gap-2 overflow-hidden md:gap-3">
+        <div className="flex shrink-0 items-center gap-2 rounded-[var(--radius)] border border-[var(--border2)] bg-[var(--bg3)] px-2 py-1">
           <span className="text-lg" aria-hidden>
             🍹
           </span>
@@ -73,7 +74,7 @@ export default function PosTopBar({
           </div>
         </div>
 
-        <nav className="flex items-center gap-0.5 sm:gap-1">
+        <nav className="scrollbar-emerald flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto overscroll-x-contain py-0.5 sm:gap-1">
           <button
             type="button"
             onClick={onGoMap}
@@ -110,7 +111,8 @@ export default function PosTopBar({
         </nav>
       </div>
 
-      <div className="app-no-drag flex shrink-0 items-center gap-1.5 md:gap-3">
+      {/* Derecha: siempre visible (no queda fuera del viewport). */}
+      <div className="app-no-drag flex shrink-0 items-center gap-1.5 border-l border-[var(--border)] pl-2 md:gap-3 md:pl-3">
         <span
           className="hidden font-mono text-xs text-[var(--text2)] sm:inline md:text-sm"
           title="Hora local"
@@ -148,9 +150,12 @@ export default function PosTopBar({
         <button
           type="button"
           onClick={session.onSignOut}
-          className="rounded-[var(--radius)] border border-[var(--border)] px-2 py-1 text-[11px] font-medium text-[var(--text3)] transition hover:border-[var(--border2)] hover:text-[var(--text2)] md:text-xs"
+          className="flex items-center gap-1.5 rounded-[var(--radius)] border border-[var(--border2)] bg-[var(--bg3)] px-2 py-1.5 text-[11px] font-semibold text-[var(--text)] shadow-sm transition hover:border-[var(--green2)] hover:bg-[var(--green-dim)] hover:text-[var(--green)] md:px-3 md:text-xs"
+          title="Cerrar sesión"
+          aria-label="Cerrar sesión (logout)"
         >
-          Salir
+          <LogOut className="h-4 w-4 shrink-0 text-[var(--green3)]" aria-hidden />
+          <span className="whitespace-nowrap">Salir</span>
         </button>
 
         {window.electronEnv?.printThermalReceipt && (
