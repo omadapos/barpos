@@ -1,5 +1,5 @@
 import { api } from './client';
-import { APP_KEY } from '../config/tenant';
+import { getAppKey } from '../config/tenant';
 
 type LoginPinData = {
   token: string;
@@ -24,7 +24,7 @@ function unwrapLoginPinPayload(body: unknown): LoginPinData {
 export const authApi = {
   loginByPin: (pin: string) =>
     api
-      .post<unknown>('/api/auth/login-waiter-pin', { pin, appKey: APP_KEY }, { skipErrorToast: true })
+      .post<unknown>('/api/auth/login-waiter-pin', { pin, appKey: getAppKey() }, { skipErrorToast: true })
       .then((r) => unwrapLoginPinPayload(r.data)),
 
   login: (username: string, password: string) =>
@@ -32,7 +32,7 @@ export const authApi = {
       .post<{ success: boolean; data: unknown }>('/api/auth/login', {
         username,
         password,
-        appKey: APP_KEY,
+        appKey: getAppKey(),
       })
       .then((r) => r.data.data),
 };

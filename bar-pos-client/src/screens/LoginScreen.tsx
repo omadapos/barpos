@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { Delete } from 'lucide-react';
+import { Delete, Settings, X } from 'lucide-react';
 import { authApi } from '@/api/auth.api';
+import { getAppKey, setAppKey } from '@/config/tenant';
 import { getApiBaseURL } from '@/lib/apiBaseUrl';
 import { useAuthStore } from '@/store/useAuthStore';
 import Spinner from '@/components/Spinner';
@@ -12,6 +13,8 @@ export function LoginScreen() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [shake, setShake] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
+  const [appKeyInput, setAppKeyInput] = useState('');
   const pinRef = useRef('');
 
   useEffect(() => {
@@ -94,10 +97,21 @@ export function LoginScreen() {
   return (
     <div className="login-app-root flex w-full flex-1 flex-col bg-[var(--bg)]">
       <header className="app-drag shrink-0 border-b border-[var(--border)] bg-[var(--bg2)]/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-11 max-w-lg items-center justify-center px-4">
+        <div className="mx-auto flex h-11 max-w-lg items-center justify-between px-4">
+          <div className="w-8"></div>
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text3)]">
             Inicio de sesión
           </span>
+          <button 
+            type="button" 
+            onClick={() => {
+              setAppKeyInput(getAppKey());
+              setShowConfig(true);
+            }} 
+            className="app-no-drag flex items-center justify-center rounded p-1.5 text-[var(--text3)] hover:bg-[var(--bg3)] hover:text-[var(--text2)] transition"
+          >
+            <Settings className="h-4 w-4" />
+          </button>
         </div>
       </header>
 
@@ -195,6 +209,50 @@ export function LoginScreen() {
           Teclado numérico · 4 dígitos
         </p>
       </div>
+
+      {showConfig && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[2px] app-no-drag" onClick={() => setShowConfig(false)}>
+          <div className="modal-enter w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg2)] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-[var(--text)]">Configuración de Terminal</h2>
+              <button onClick={() => setShowConfig(false)} className="rounded p-1 text-[var(--text2)] hover:bg-[var(--bg3)] transition">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mb-6">
+              <label className="mb-2 block text-sm font-medium text-[var(--text2)]">App Key</label>
+              <input
+                type="text"
+                value={appKeyInput}
+                onChange={(e) => setAppKeyInput(e.target.value)}
+                className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)] px-3 py-2 text-[var(--text)] transition focus:border-[var(--green)] focus:outline-none"
+                placeholder="UUID o slug del restaurante"
+              />
+              <p className="mt-2 text-xs text-[var(--text3)]">
+                Este código vincula esta tableta con su sucursal correspondiente.
+              </p>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowConfig(false)}
+                className="rounded-[var(--radius)] px-4 py-2 text-sm font-medium text-[var(--text2)] transition hover:bg-[var(--bg3)]"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setAppKey(appKeyInput);
+                  setShowConfig(false);
+                  toast.success('App Key guardado localmente');
+                }}
+                className="rounded-[var(--radius)] bg-[var(--green)] px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--green2)] active:scale-95"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

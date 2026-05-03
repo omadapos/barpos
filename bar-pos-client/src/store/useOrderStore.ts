@@ -40,7 +40,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   closeMeasureModal: () => set({ selectedProduct: null, showMeasureModal: false }),
 
   addFlatItem: async (product) => {
-    const { currentOrder, activeCategory } = get();
+    const { currentOrder } = get();
     if (!currentOrder) return;
     await ordersApi.addItem(currentOrder.id, {
       productId: product.id,
@@ -50,7 +50,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   },
 
   addMeasuredItem: async (product, measure) => {
-    const { currentOrder, activeCategory } = get();
+    const { currentOrder } = get();
     if (!currentOrder) return;
     await ordersApi.addItem(currentOrder.id, {
       productId: product.id,

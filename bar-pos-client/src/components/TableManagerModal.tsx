@@ -97,8 +97,8 @@ export default function TableManagerModal({ open, onClose }: Props) {
     }
     setBusy(true);
     try {
-      await tablesApi.delete(id);
-      toast.success('Mesa eliminada');
+      await tablesApi.toggle(id);
+      toast.success('Mesa desactivada');
       await refresh();
     } finally {
       setBusy(false);
@@ -162,7 +162,7 @@ export default function TableManagerModal({ open, onClose }: Props) {
                 className="rounded-[var(--radius)] border border-[var(--red)]/40 p-2 hover:bg-[var(--red)]/15 disabled:opacity-40"
                 onClick={() => remove(t.id)}
                 disabled={busy}
-                aria-label="Eliminar"
+                aria-label="Desactivar"
               >
                 <Trash2 className="h-5 w-5 text-[var(--red)]" />
               </button>
