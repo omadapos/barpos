@@ -106,8 +106,8 @@ export default function TableManagerModal({ open, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[2px] app-no-drag">
-      <div className="modal-enter max-h-[90vh] w-full max-w-lg overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg2)] shadow-2xl">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-md app-no-drag">
+      <div className="modal-enter max-h-[90vh] w-full max-w-lg overflow-hidden rounded-[var(--radius-lg)] border border-white/20 bg-[var(--bg2)]/95 shadow-glass backdrop-blur-lg">
         <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
           <h2 className="text-lg font-bold text-[var(--text)]">Gestionar mesas</h2>
           <button
@@ -228,7 +228,7 @@ export default function TableManagerModal({ open, onClose }: Props) {
               />
               <button
                 type="button"
-                className="min-h-[52px] rounded-[var(--radius)] bg-[var(--green3)] text-lg font-bold text-white hover:bg-[var(--green2)] disabled:opacity-50"
+                className="min-h-[52px] rounded-[var(--radius)] bg-[var(--green3)] text-lg font-bold text-white shadow-glow-green hover:bg-[var(--green2)] disabled:opacity-50"
                 onClick={() => void addTable()}
                 disabled={busy}
               >

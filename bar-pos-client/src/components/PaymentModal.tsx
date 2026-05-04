@@ -111,7 +111,7 @@ export default function PaymentModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[2px] app-no-drag"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-md app-no-drag"
       onClick={() => {
         setMethod(null);
         resetAmount();
@@ -119,7 +119,7 @@ export default function PaymentModal({
       }}
     >
       <div
-        className="modal-enter w-[300px] max-w-full rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg2)] p-4 shadow-2xl"
+        className="modal-enter w-[300px] max-w-full rounded-[var(--radius-lg)] border border-white/20 bg-[var(--bg2)]/95 p-4 shadow-glass backdrop-blur-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-start justify-between gap-2">
@@ -176,7 +176,7 @@ export default function PaymentModal({
             <button
               type="button"
               disabled={submitting}
-              className="min-h-[52px] w-full rounded-[var(--radius)] bg-[var(--green2)] text-base font-bold text-white transition hover:bg-[var(--green)] disabled:opacity-40"
+              className="min-h-[52px] w-full rounded-[var(--radius)] bg-[var(--green2)] text-base font-bold text-white shadow-glow-green transition hover:bg-[var(--green)] disabled:opacity-40"
               onClick={() => void confirm('card')}
             >
               ✓ CONFIRMAR PAGO
@@ -293,7 +293,7 @@ export default function PaymentModal({
             <button
               type="button"
               disabled={!cashOk || submitting}
-              className="min-h-[52px] w-full rounded-[var(--radius)] bg-[var(--green2)] text-base font-bold text-white transition hover:bg-[var(--green)] disabled:opacity-40"
+              className="min-h-[52px] w-full rounded-[var(--radius)] bg-[var(--green2)] text-base font-bold text-white shadow-glow-green transition hover:bg-[var(--green)] disabled:opacity-40"
               onClick={() => void confirm('cash')}
             >
               ✓ CONFIRMAR PAGO
