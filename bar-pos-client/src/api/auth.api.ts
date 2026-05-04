@@ -24,15 +24,32 @@ function unwrapLoginPinPayload(body: unknown): LoginPinData {
 export const authApi = {
   loginByPin: (pin: string) =>
     api
-      .post<unknown>('/api/auth/login-waiter-pin', { pin, appKey: getAppKey() }, { skipErrorToast: true })
+      .post<unknown>(
+        `/api/auth/login-waiter-pin?appKey=${getAppKey()}`,
+        { 
+          pin, 
+          appKey: getAppKey(),
+          app_key: getAppKey()
+        },
+        { 
+          skipErrorToast: true,
+          headers: { 'x-app-key': getAppKey() }
+        }
+      )
       .then((r) => unwrapLoginPinPayload(r.data)),
 
   login: (username: string, password: string) =>
     api
-      .post<{ success: boolean; data: unknown }>('/api/auth/login', {
-        username,
-        password,
-        appKey: getAppKey(),
-      })
+      .post<{ success: boolean; data: unknown }>(
+        `/api/auth/login?appKey=${getAppKey()}`,
+        {
+          username,
+          password,
+          appKey: getAppKey(),
+        },
+        {
+          headers: { 'x-app-key': getAppKey() }
+        }
+      )
       .then((r) => r.data.data),
 };

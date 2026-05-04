@@ -32,10 +32,13 @@ export function LoginScreen() {
         if (!e.response) {
           setError(`Error de conexión con el servidor`);
         } else {
-          setError('PIN incorrecto');
+          const serverMsg = e.response.data?.message || e.response.data?.error;
+          setError(serverMsg || 'PIN incorrecto');
         }
+      } else if (e instanceof Error) {
+        setError(e.message);
       } else {
-        setError('PIN incorrecto');
+        setError('Error desconocido');
       }
       setShake(true);
       window.setTimeout(() => setShake(false), 500);
