@@ -55,7 +55,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     await ordersApi.addItem(currentOrder.id, {
       productId: product.id,
       quantity: 1,
-      notes: measure.measureName,
+      measureName: measure.measureName,
     });
     get().closeMeasureModal();
     await get().refreshOrder();

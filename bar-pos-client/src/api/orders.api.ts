@@ -20,6 +20,7 @@ export const ordersApi = {
     item: {
       productId: number;
       quantity: number;
+      measureName?: string;
       notes?: string;
     }
   ) =>
@@ -37,7 +38,7 @@ export const ordersApi = {
 
   pay: (orderId: number, paymentMethod: 'cash' | 'card') =>
     api
-      .post<ApiResponse<Order>>(`/api/orders/${orderId}/pay`, { method: paymentMethod })
+      .post<ApiResponse<Order>>(`/api/orders/${orderId}/pay`, { paymentMethod })
       .then((r) => r.data.data),
 
   cancel: (orderId: number) =>
