@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, CheckCircle2, Wallet, CreditCard, ArrowLeft } from 'lucide-react';
 import { formatMoney } from '@/lib/format';
 
 type Props = {
@@ -31,19 +31,16 @@ export default function PaymentModal({
   const [amountStr, setAmountStr] = useState('0');
   const [submitting, setSubmitting] = useState(false);
 
-  const resetAmount = useCallback(() => setAmountStr('0'), []);
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && open) {
-        setMethod(null);
-        resetAmount();
-        onClose();
+        if (method) setMethod(null);
+        else onClose();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose, resetAmount]);
+  }, [open, onClose, method]);
 
   useEffect(() => {
     if (!open) {
@@ -69,21 +66,18 @@ export default function PaymentModal({
       if (key === '00') {
         if (prev === '0') return '0';
         const next = prev + '00';
-        if (next.length > 7) return prev;
-        return next;
+        return next.length > 7 ? prev : next;
       }
       if (prev === '0') return key;
       const next = prev + key;
-      if (next.length > 7) return prev;
-      return next;
+      return next.length > 7 ? prev : next;
     });
   };
 
   const addQuick = (delta: number) => {
     setAmountStr((prev) => {
       const n = (parseInt(prev || '0', 10) || 0) + delta;
-      const capped = Math.min(Math.max(0, n), 9_999_999);
-      return String(capped);
+      return String(Math.min(Math.max(0, n), 9_999_999));
     });
   };
 
@@ -96,218 +90,135 @@ export default function PaymentModal({
     }
   };
 
-  const exactPay = async () => {
-    setSubmitting(true);
-    try {
-      await onConfirm('cash');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const cashOk = amountNumber >= totalInt;
   const numpadBtn =
-    'flex min-h-[54px] min-w-0 items-center justify-center rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)] text-lg font-bold text-[var(--text)] transition hover:border-[var(--border2)] hover:bg-[var(--bg4)] active:scale-[0.95]';
+    'flex h-14 items-center justify-center rounded-xl border border-[var(--border)] bg-white text-xl font-bold text-[var(--text)] transition-all hover:bg-[var(--bg3)] active:scale-90';
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-md app-no-drag"
-      onClick={() => {
-        setMethod(null);
-        resetAmount();
-        onClose();
-      }}
-    >
-      <div
-        className="modal-enter w-[300px] max-w-full rounded-[var(--radius-lg)] border border-white/20 bg-[var(--bg2)]/95 p-4 shadow-glass backdrop-blur-lg"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="mb-3 flex items-start justify-between gap-2">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md" onClick={onClose}>
+      <div className="w-full max-w-md rounded-[2.5rem] bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+        <div className="mb-6 flex items-start justify-between">
           <div>
-            <h2 className="text-base font-bold text-[var(--text)]">
-              Cobro{tableLabel ? ` — ${tableLabel}` : ''}
-            </h2>
-            <p className="mt-1 text-sm text-[var(--text3)]">
-              TOTAL:{' '}
-              <span className="font-bold text-[var(--green)]">{formatMoney(totalNum)}</span>
-            </p>
+            <h2 className="text-2xl font-black tracking-tight text-[var(--text)]">Finalizar Pago</h2>
+            <p className="text-sm font-bold text-[var(--text3)] uppercase tracking-widest">{tableLabel || 'Caja Rápida'}</p>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setMethod(null);
-              resetAmount();
-              onClose();
-            }}
-            className="rounded-lg p-1.5 text-[var(--text2)] hover:bg-[var(--bg3)]"
-            aria-label="Cerrar"
-          >
+          <button onClick={onClose} className="rounded-full bg-[var(--bg3)] p-2 text-[var(--text2)] transition hover:bg-[var(--bg4)]">
             <X className="h-6 w-6" />
           </button>
         </div>
 
+        <div className="mb-8 rounded-3xl bg-[var(--green-pale)] p-6 text-center">
+          <span className="text-xs font-black uppercase tracking-[0.2em] text-[var(--green-dark)] opacity-60">Total a Cobrar</span>
+          <div className="text-4xl font-black text-[var(--green)] font-mono">{formatMoney(totalNum)}</div>
+        </div>
+
         {!method && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-4">
             <button
-              type="button"
-              className="min-h-[80px] rounded-[var(--radius)] bg-[var(--amber)] text-base font-bold text-[#1a1204] transition hover:brightness-110 active:scale-[0.97]"
-              onClick={() => {
-                setMethod('cash');
-                resetAmount();
-              }}
+              onClick={() => setMethod('cash')}
+              className="flex h-20 items-center justify-between rounded-2xl bg-[var(--bg3)] px-6 transition-all hover:bg-[var(--green-dim)] group active:scale-95"
             >
-              💵 EFECTIVO
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm text-[var(--green)]">
+                  <Wallet className="h-6 w-6" />
+                </div>
+                <span className="text-lg font-black text-[var(--text)]">Efectivo</span>
+              </div>
+              <div className="h-8 w-8 rounded-full border-2 border-[var(--border)] group-hover:border-[var(--green)] transition-colors" />
             </button>
             <button
-              type="button"
-              className="min-h-[80px] rounded-[var(--radius)] border border-[var(--blue)]/40 bg-[var(--bg3)] text-base font-bold text-[var(--blue)] transition hover:bg-[var(--bg4)] active:scale-[0.97]"
               onClick={() => setMethod('card')}
+              className="flex h-20 items-center justify-between rounded-2xl bg-[var(--bg3)] px-6 transition-all hover:bg-[var(--blue-pale)] group active:scale-95"
             >
-              💳 TARJETA
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm text-[var(--blue)]">
+                  <CreditCard className="h-6 w-6" />
+                </div>
+                <span className="text-lg font-black text-[var(--text)]">Tarjeta / Link</span>
+              </div>
+              <div className="h-8 w-8 rounded-full border-2 border-[var(--border)] group-hover:border-[var(--blue)] transition-colors" />
             </button>
           </div>
         )}
 
         {method === 'card' && (
-          <div className="space-y-3">
-            <p className="text-center text-sm text-[var(--text2)]">
-              Pago con tarjeta — {formatMoney(totalNum)}
-            </p>
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 py-8 justify-center flex-col text-center">
+              <div className="h-20 w-20 rounded-full bg-[var(--blue-pale)] text-[var(--blue)] flex items-center justify-center">
+                <CreditCard className="h-10 w-10" />
+              </div>
+              <p className="text-sm font-bold text-[var(--text2)]">Procesa el pago en la terminal bancaria por <span className="text-[var(--text)]">{formatMoney(totalNum)}</span></p>
+            </div>
             <button
-              type="button"
+              onClick={() => confirm('card')}
               disabled={submitting}
-              className="min-h-[52px] w-full rounded-[var(--radius)] bg-[var(--green2)] text-base font-bold text-white shadow-glow-green transition hover:bg-[var(--green)] disabled:opacity-40"
-              onClick={() => void confirm('card')}
+              className="btn-primary w-full py-5 text-xl rounded-2xl active:scale-95"
             >
-              ✓ CONFIRMAR PAGO
+              <CheckCircle2 className="h-6 w-6 mr-2" /> Confirmar Pago
             </button>
-            <button
-              type="button"
-              className="min-h-[48px] w-full rounded-[var(--radius)] border border-[var(--border2)] text-[var(--text3)] hover:border-[var(--green)] hover:text-[var(--text2)]"
-              onClick={() => setMethod(null)}
-              disabled={submitting}
-            >
-              Volver
+            <button onClick={() => setMethod(null)} className="w-full text-sm font-bold text-[var(--text3)] uppercase tracking-widest hover:text-[var(--text)] transition">
+              ← Cambiar método
             </button>
           </div>
         )}
 
         {method === 'cash' && (
-          <div className="space-y-3">
-            <div className="rounded-[var(--radius-lg)] border border-[var(--border2)] bg-[var(--bg3)] px-3 py-3 text-center transition-colors">
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--text3)]">
-                Monto recibido
-              </div>
-              <div className="text-2xl font-bold text-[var(--green)]">
-                {formatDisplayAmount(amountStr)}
-              </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-2">
+               <button onClick={() => setMethod(null)} className="p-2 text-[var(--text3)] hover:text-[var(--text)] transition">
+                  <ArrowLeft className="h-6 w-6" />
+               </button>
+               <div className="flex-1 rounded-2xl bg-[var(--bg3)] p-4 text-right">
+                  <span className="text-[10px] font-black text-[var(--text3)] uppercase tracking-widest">Recibido</span>
+                  <div className="text-2xl font-black text-[var(--text)] font-mono">{formatDisplayAmount(amountStr)}</div>
+               </div>
             </div>
 
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => void exactPay()}
-                className="rounded-full border border-[var(--green2)] px-2 py-1.5 text-[11px] font-semibold text-[var(--green)] transition hover:bg-[var(--green-dim)]"
-              >
-                Exacto {formatMoney(totalInt)}
-              </button>
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => addQuick(500)}
-                className="rounded-full border border-[var(--green2)] px-2 py-1.5 text-[11px] font-semibold text-[var(--green)] transition hover:bg-[var(--green-dim)]"
-              >
-                +$500
-              </button>
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => addQuick(1000)}
-                className="rounded-full border border-[var(--green2)] px-2 py-1.5 text-[11px] font-semibold text-[var(--green)] transition hover:bg-[var(--green-dim)]"
-              >
-                +$1,000
-              </button>
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => addQuick(2000)}
-                className="rounded-full border border-[var(--green2)] px-2 py-1.5 text-[11px] font-semibold text-[var(--green)] transition hover:bg-[var(--green-dim)]"
-              >
-                +$2,000
-              </button>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              {(['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const).map((d) => (
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {[5, 10, 20, 50, 100].map(val => (
                 <button
-                  key={d}
-                  type="button"
-                  disabled={submitting}
-                  className={numpadBtn}
-                  onClick={() => handleKey(d)}
+                  key={val}
+                  onClick={() => addQuick(val)}
+                  className="whitespace-nowrap rounded-full bg-[var(--green-dim)] px-4 py-2 text-xs font-black text-[var(--green)] transition hover:brightness-95 active:scale-90"
                 >
-                  {d}
+                  +${val}
                 </button>
               ))}
               <button
-                type="button"
-                disabled={submitting}
-                className={`${numpadBtn} text-[var(--red)]`}
-                onClick={() => handleKey('back')}
+                onClick={() => setAmountStr(String(totalInt))}
+                className="whitespace-nowrap rounded-full bg-[var(--text)] px-4 py-2 text-xs font-black text-white transition active:scale-90"
               >
-                ⌫
-              </button>
-              <button
-                type="button"
-                disabled={submitting}
-                className={numpadBtn}
-                onClick={() => handleKey('0')}
-              >
-                0
-              </button>
-              <button
-                type="button"
-                disabled={submitting}
-                className={`${numpadBtn} text-[var(--text2)]`}
-                onClick={() => handleKey('00')}
-              >
-                00
+                Exacto
               </button>
             </div>
 
-            <div
-              className={`rounded-[var(--radius-lg)] border px-3 py-2.5 text-center text-sm font-semibold transition-colors ${
-                change >= 0
-                  ? 'border-[var(--border2)] bg-[var(--green-pale)] text-[var(--green)]'
-                  : 'border-[var(--red)]/60 bg-[var(--red-pale)] text-[var(--red)]'
-              }`}
-            >
-              {change >= 0 ? (
-                <>CAMBIO: {formatMoney(change)}</>
-              ) : (
-                <>Faltan {formatMoney(Math.abs(change))}</>
-              )}
+            <div className="grid grid-cols-3 gap-3">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '00', 'back'].map(k => (
+                <button
+                  key={k}
+                  onClick={() => k === 'back' ? handleKey('back') : handleKey(k)}
+                  className={`${numpadBtn} ${k === 'back' ? 'text-[var(--red)]' : ''}`}
+                >
+                  {k === 'back' ? '⌫' : k}
+                </button>
+              ))}
+            </div>
+
+            <div className={`rounded-2xl p-4 text-center transition-all ${change >= 0 ? 'bg-[var(--green-pale)] border-2 border-[var(--green)]/20' : 'bg-[var(--red-pale)]'}`}>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
+                {change >= 0 ? 'Vuelto a entregar' : 'Monto faltante'}
+              </span>
+              <div className={`text-2xl font-black font-mono ${change >= 0 ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
+                {formatMoney(Math.abs(change))}
+              </div>
             </div>
 
             <button
-              type="button"
+              onClick={() => confirm('cash')}
               disabled={!cashOk || submitting}
-              className="min-h-[52px] w-full rounded-[var(--radius)] bg-[var(--green2)] text-base font-bold text-white shadow-glow-green transition hover:bg-[var(--green)] disabled:opacity-40"
-              onClick={() => void confirm('cash')}
+              className="btn-primary w-full py-5 text-xl rounded-2xl active:scale-95 disabled:opacity-40 disabled:grayscale"
             >
-              ✓ CONFIRMAR PAGO
-            </button>
-            <button
-              type="button"
-              className="min-h-[48px] w-full rounded-[var(--radius)] border border-[var(--border2)] text-[var(--text3)] hover:border-[var(--green)] hover:text-[var(--text2)]"
-              onClick={() => {
-                setMethod(null);
-                resetAmount();
-              }}
-              disabled={submitting}
-            >
-              Volver
+              <CheckCircle2 className="h-6 w-6 mr-2" /> Finalizar Venta
             </button>
           </div>
         )}

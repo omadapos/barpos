@@ -1,38 +1,48 @@
 :root {
-  /* Fondos — blancos y grises muy claros */
-  --bg: #ffffff;
-  --bg2: #f8fafc;
+  /* Fondos */
+  --bg: #f8fafc;
+  --bg2: #ffffff;
   --bg3: #f1f5f9;
   --bg4: #e2e8f0;
+  --bg-glass: rgba(255, 255, 255, 0.85);
 
   /* Bordes */
   --border: #e2e8f0;
   --border2: #cbd5e1;
 
-  /* Marca — verde esmeralda vivo */
+  /* Marca — verde */
   --green: #047857;
   --green2: #10b981;
   --green3: #059669;
   --green-dim: #d1fae5;
   --green-pale: #ecfdf5;
+  --green-dark: #064e3b;
 
-  /* Texto — oscuro sobre claro */
+  /* Texto */
   --text: #0f172a;
   --text2: #475569;
   --text3: #94a3b8;
 
-  /* Semánticos vivos */
-  --amber: #f59e0b;
-  --red: #ef4444;
+  /* Semánticos */
+  --amber: #d97706;
+  --amber-pale: #fffbeb;
+  --red: #dc2626;
   --red-pale: #fef2f2;
-
-  /* Acento azul vivo (tarjetas, links) */
   --blue: #2563eb;
-  --cyan: #06b6d4;
+  --blue-pale: #eff6ff;
+  --cyan: #0891b2;
 
+  /* Elevación */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+
+  /* Radios */
   --radius: 10px;
   --radius-lg: 14px;
-  --radius-xl: 18px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
 }
 
 * {
@@ -40,22 +50,11 @@
 }
 
 @keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  20% {
-    transform: translateX(-8px);
-  }
-  40% {
-    transform: translateX(8px);
-  }
-  60% {
-    transform: translateX(-8px);
-  }
-  80% {
-    transform: translateX(8px);
-  }
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-8px); }
+  80% { transform: translateX(8px); }
 }
 
 .shake {
@@ -67,14 +66,8 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .modal-enter {
@@ -82,14 +75,8 @@
 }
 
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .item-enter {
@@ -97,15 +84,8 @@
 }
 
 @keyframes pulse-green {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.65;
-    transform: scale(1.08);
-  }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.08); }
 }
 
 .dot-occupied {

@@ -10,11 +10,11 @@ function formatElapsed(iso?: string): string {
   const ms = Date.now() - new Date(iso).getTime();
   if (ms < 0) return '';
   const min = Math.floor(ms / 60_000);
-  if (min < 1) return 'hace un momento';
-  if (min < 60) return `hace ${min} min`;
+  if (min < 1) return 'reciente';
+  if (min < 60) return `${min}m`;
   const h = Math.floor(min / 60);
   const m = min % 60;
-  return m ? `hace ${h}h ${m}min` : `hace ${h}h`;
+  return m ? `${h}h ${m}m` : `${h}h`;
 }
 
 type Props = {
@@ -30,7 +30,6 @@ type Props = {
 export default function TableCard({
   table,
   occupied,
-  itemCount,
   total,
   createdAt,
   onOpen,
@@ -52,18 +51,18 @@ export default function TableCard({
     setMenuOpen(true);
   }, []);
 
-  const base =
-    'relative flex min-h-[112px] min-w-[180px] w-full cursor-pointer select-none flex-col rounded-[var(--radius-lg)] border p-4 text-left shadow-md transition-all duration-200 app-no-drag';
+  const getStatusClasses = () => {
+    if (occupied) {
+      return 'border-[var(--green)] bg-[var(--green-pale)] shadow-sm';
+    }
+    return 'border-[var(--border)] bg-white hover:border-[var(--green2)] hover:shadow-md';
+  };
 
   return (
-    <div className="relative">
+    <div className="relative group">
       <button
         type="button"
-        className={`${base} ${
-          occupied
-            ? 'border-[var(--border2)] bg-[var(--green-pale)] hover:brightness-105 active:scale-[0.99]'
-            : 'border-[var(--border)] bg-[var(--bg3)] hover:border-[var(--border2)] hover:bg-[var(--bg4)] active:scale-[0.99]'
-        }`}
+        className={`relative flex min-h-[130px] w-full flex-col rounded-2xl border-2 p-5 text-left transition-all duration-200 active:scale-[0.98] app-no-drag ${getStatusClasses()}`}
         onClick={onOpen}
         onContextMenu={openMenu}
         onPointerDown={() => {
@@ -74,34 +73,30 @@ export default function TableCard({
         onPointerLeave={clearTimer}
         onPointerCancel={clearTimer}
       >
-        <div className="flex items-start justify-between gap-2">
-          <span className="text-lg font-bold text-[var(--text)]">{table.name}</span>
-          <span className="flex items-center gap-1 text-xs text-[var(--text2)]">
-            <Users className="h-3.5 w-3.5" />
-            {table.capacity} pers.
-          </span>
+        <div className="flex items-start justify-between">
+          <span className="text-xl font-black tracking-tight text-[var(--text)]">{table.name}</span>
+          <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${occupied ? 'bg-[var(--green)] text-white' : 'bg-[var(--bg3)] text-[var(--text3)]'}`}>
+            <Users className="h-3 w-3" />
+            {table.capacity}
+          </div>
         </div>
 
-        <div className="mt-3 flex flex-1 flex-col justify-end gap-2">
+        <div className="mt-auto flex flex-col gap-1">
           {occupied ? (
             <>
-              <div className="flex items-center gap-2 text-xs font-semibold text-[var(--green)]">
-                <span className="dot-occupied h-2 w-2 shrink-0 rounded-full bg-[var(--green2)] ring-2 ring-[var(--green2)]/30" />
-                OCUPADA
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[var(--green)] uppercase tracking-wider">Ocupada</span>
+                <span className="text-[10px] font-medium text-[var(--text3)]">{formatElapsed(createdAt)}</span>
               </div>
-              <div className="text-lg font-bold text-[var(--green)]">{formatMoney(total ?? 0)}</div>
-              <div className="text-xs text-[var(--text2)]">
-                {itemCount ?? 0} ítem{(itemCount ?? 0) !== 1 ? 's' : ''}
-                {createdAt ? ` · ${formatElapsed(createdAt)}` : ''}
+              <div className="text-xl font-black text-[var(--green)]">
+                {formatMoney(total ?? 0)}
               </div>
             </>
           ) : (
-            <>
-              <div className="flex items-center gap-2 text-xs font-medium text-[var(--text3)]">
-                <span className="h-2 w-2 shrink-0 rounded-full border-2 border-[var(--text3)] bg-transparent" />
-                LIBRE
-              </div>
-            </>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-[var(--border2)]" />
+              <span className="text-xs font-bold text-[var(--text3)] uppercase tracking-wider">Libre</span>
+            </div>
           )}
         </div>
       </button>
@@ -110,30 +105,30 @@ export default function TableCard({
         <>
           <button
             type="button"
-            className="fixed inset-0 z-40 cursor-default bg-slate-900/40 backdrop-blur-[1px] app-no-drag"
-            aria-label="Cerrar menú"
+            className="fixed inset-0 z-40 cursor-default bg-black/20 backdrop-blur-sm"
             onClick={() => setMenuOpen(false)}
           />
-          <div className="absolute right-0 top-full z-50 mt-1 min-w-[200px] overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg2)] py-1 shadow-xl app-no-drag">
+          <div className="absolute right-0 top-full z-50 mt-2 min-w-[180px] overflow-hidden rounded-xl border border-[var(--border)] bg-white py-1 shadow-2xl animate-in fade-in zoom-in duration-150">
             <button
               type="button"
-              className="block w-full px-4 py-3 text-left text-sm text-[var(--text)] hover:bg-[var(--bg3)]"
+              className="flex w-full items-center px-4 py-3 text-left text-sm font-semibold text-[var(--text)] hover:bg-[var(--bg3)]"
               onClick={() => {
                 setMenuOpen(false);
                 onViewOrder();
               }}
             >
-              Ver orden
+              Abrir Cuenta
             </button>
+            <div className="h-px bg-[var(--border)] mx-2" />
             <button
               type="button"
-              className="block w-full px-4 py-3 text-left text-sm text-[var(--text3)] hover:bg-[var(--bg3)]"
+              className="flex w-full items-center px-4 py-3 text-left text-sm font-semibold text-[var(--text3)] hover:bg-[var(--bg3)]"
               onClick={() => {
                 setMenuOpen(false);
-                toast('Transferencia de mesa disponible en versión 2');
+                toast('Mover mesa disponible en v2.2');
               }}
             >
-              Transferir mesa (v2)
+              Mover Mesa
             </button>
           </div>
         </>

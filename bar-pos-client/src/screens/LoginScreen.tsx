@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { Delete, Settings, X } from 'lucide-react';
+import { ChevronLeft, Settings, X, Wine } from 'lucide-react';
 import { authApi } from '@/api/auth.api';
 import { getAppKey, setAppKey } from '@/config/tenant';
-import { getApiBaseURL } from '@/lib/apiBaseUrl';
 import { useAuthStore } from '@/store/useAuthStore';
 import Spinner from '@/components/Spinner';
 
@@ -31,12 +30,7 @@ export function LoginScreen() {
       setPin('');
       if (axios.isAxiosError(e)) {
         if (!e.response) {
-          const base = getApiBaseURL() || '(proxy Vite → API local)';
-          setError(
-            `Sin conexión con el servidor (${base}). Revisa red y que el backend esté arriba. App empaquetada: vuelve a generar el build tras cambiar .env. API local en dev: VITE_API_URL o VITE_USE_LOCAL_PROXY=true.`
-          );
-        } else if (e.response.status === 404) {
-          setError('Este servidor no expone /api/auth/login-pin.');
+          setError(`Error de conexión con el servidor`);
         } else {
           setError('PIN incorrecto');
         }
@@ -72,184 +66,135 @@ export function LoginScreen() {
       if (isLoading) return;
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault();
-        const p = pinRef.current;
-        if (p.length >= 4) return;
-        setError('');
-        const newPin = p + e.key;
-        setPin(newPin);
-        if (newPin.length === 4) void submitPin(newPin);
+        handleDigit(e.key);
       }
       if (e.key === 'Backspace') {
         e.preventDefault();
-        setPin((q) => q.slice(0, -1));
-        setError('');
+        handleBackspace();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isLoading, submitPin]);
+  }, [isLoading]);
 
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
 
   const keyClass =
-    'flex min-h-[72px] min-w-[72px] items-center justify-center rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)] text-[22px] font-bold text-[var(--green)] shadow-sm transition hover:border-[var(--border2)] hover:bg-[var(--bg4)] active:scale-[0.94] active:border-[var(--green2)] disabled:pointer-events-none disabled:opacity-40 sm:min-h-[76px] sm:min-w-[76px]';
+    'flex h-20 w-20 items-center justify-center rounded-2xl bg-white border border-[var(--border)] shadow-sm text-2xl font-semibold text-[var(--text)] transition-all hover:bg-[var(--bg3)] active:scale-95';
 
   return (
-    <div className="login-app-root flex w-full flex-1 flex-col bg-[var(--bg)]">
-      <header className="app-drag shrink-0 border-b border-[var(--border)] bg-[var(--bg2)]/80 backdrop-blur-sm">
-        <div className="mx-auto flex h-11 max-w-lg items-center justify-between px-4">
-          <div className="w-8"></div>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--text3)]">
-            Inicio de sesión
-          </span>
-          <button 
-            type="button" 
-            onClick={() => {
-              setAppKeyInput(getAppKey());
-              setShowConfig(true);
-            }} 
-            className="app-no-drag flex items-center justify-center rounded p-1.5 text-[var(--text3)] hover:bg-[var(--bg3)] hover:text-[var(--text2)] transition"
-          >
-            <Settings className="h-4 w-4" />
-          </button>
-        </div>
-      </header>
-
-      <div className="app-no-drag flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-8">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div
-            className="mb-5 flex h-[88px] w-[88px] items-center justify-center rounded-[var(--radius-xl)] border border-[var(--border2)] bg-[var(--bg3)] text-[2.75rem] shadow-lg shadow-black/30"
-            aria-hidden
-          >
-            🍹
-          </div>
-          <h1 className="text-[1.75rem] font-bold tracking-tight text-[var(--text)] sm:text-3xl">
-            Bar POS
-          </h1>
-          <p className="mt-2 max-w-xs text-sm leading-relaxed text-[var(--text2)]">
-            Sistema de punto de venta
-          </p>
-        </div>
-
-        <div
-          className={`w-full max-w-[340px] rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg2)] p-7 shadow-2xl sm:p-8 ${
-            shake ? 'shake' : ''
-          }`}
+    <div className="login-app-root flex min-h-screen w-full flex-col items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <button
+          type="button"
+          onClick={() => {
+            setAppKeyInput(getAppKey());
+            setShowConfig(true);
+          }}
+          className="rounded-full bg-white/10 p-3 text-white backdrop-blur-md transition hover:bg-white/20"
         >
-          <p className="text-center text-[15px] font-medium text-[var(--text2)]">
-            Ingresa tu PIN
-          </p>
+          <Settings className="h-6 w-6" />
+        </button>
+      </div>
 
-          {isLoading ? (
-            <div className="my-8 flex justify-center">
-              <Spinner className="h-11 w-11 border-t-[var(--green)]" />
-            </div>
-          ) : (
-            <div className="my-8 flex justify-center gap-4" role="status" aria-live="polite">
+      <div
+        className={`w-full max-w-sm rounded-[2rem] bg-white/95 p-8 shadow-2xl backdrop-blur-sm transition-all sm:p-10 ${
+          shake ? 'shake' : ''
+        }`}
+      >
+        <div className="mb-8 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-[var(--green-pale)] text-[var(--green)]">
+            <Wine className="h-12 w-12" />
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-[var(--text)]">Bar POS</h1>
+          <p className="mt-1 text-sm font-medium text-[var(--text3)] uppercase tracking-widest">
+            Acceso Personal
+          </p>
+        </div>
+
+        {isLoading ? (
+          <div className="my-12 flex flex-col items-center gap-4">
+            <Spinner className="h-12 w-12 border-t-[var(--green)]" />
+            <span className="text-sm font-semibold text-[var(--text2)]">Validando PIN...</span>
+          </div>
+        ) : (
+          <>
+            <div className="mb-10 flex justify-center gap-5">
               {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className={`h-[14px] w-[14px] rounded-full border-2 transition-all duration-150 ${
+                  className={`h-4 w-4 rounded-full border-2 transition-all duration-200 ${
                     pin.length > i
-                      ? 'border-[var(--green2)] bg-[var(--green2)] shadow-[0_0_12px_rgba(52,211,153,0.45)]'
+                      ? 'scale-110 border-[var(--green)] bg-[var(--green)] shadow-[0_0_15px_rgba(16,185,129,0.5)]'
                       : 'border-[var(--border2)] bg-transparent'
                   }`}
                 />
               ))}
             </div>
-          )}
 
-          <div
-            className="mx-auto grid max-w-[280px] select-none grid-cols-3 gap-3"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-          >
-            {keys.map((k) => (
+            <div className="mx-auto grid grid-cols-3 gap-4">
+              {keys.map((k) => (
+                <button key={k} type="button" onClick={() => handleDigit(k)} className={keyClass}>
+                  {k}
+                </button>
+              ))}
               <button
-                key={k}
                 type="button"
-                disabled={isLoading}
-                onClick={() => handleDigit(k)}
-                className={keyClass}
+                onClick={handleBackspace}
+                className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white border border-[var(--border)] text-[var(--red)] transition-all hover:bg-[var(--red-pale)] active:scale-95"
               >
-                {k}
+                <ChevronLeft className="h-8 w-8" />
               </button>
-            ))}
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={handleBackspace}
-              className="col-span-2 flex min-h-[72px] items-center justify-center gap-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg2)] text-[var(--red)] transition hover:bg-[var(--bg4)] active:scale-[0.94] disabled:pointer-events-none disabled:opacity-40 sm:min-h-[76px]"
-              aria-label="Borrar último dígito"
-            >
-              <Delete className="h-7 w-7 opacity-90" strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={() => handleDigit('0')}
-              className={keyClass}
-            >
-              0
-            </button>
-          </div>
+              <button type="button" onClick={() => handleDigit('0')} className={keyClass}>
+                0
+              </button>
+              <div className="h-20 w-20" />
+            </div>
+          </>
+        )}
 
-          <div className="mt-6 min-h-[3rem]">
-            {error ? (
-              <p
-                className="rounded-[var(--radius)] border border-[var(--red)]/30 bg-[var(--red-pale)] px-3 py-2.5 text-center text-sm leading-snug text-[var(--red)]"
-                role="alert"
-              >
-                {error}
-              </p>
-            ) : null}
-          </div>
+        <div className="mt-8 min-h-[1.5rem]">
+          {error && (
+            <p className="text-center text-sm font-bold text-[var(--red)] animate-pulse">
+              {error}
+            </p>
+          )}
         </div>
-
-        <p className="mt-10 text-center text-xs text-[var(--text3)]">
-          Teclado numérico · 4 dígitos
-        </p>
       </div>
 
+      <p className="mt-8 text-sm font-semibold text-white/60 uppercase tracking-widest">
+        v2.1.0 Premium
+      </p>
+
       {showConfig && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[2px] app-no-drag" onClick={() => setShowConfig(false)}>
-          <div className="modal-enter w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg2)] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-[var(--text)]">Configuración de Terminal</h2>
-              <button onClick={() => setShowConfig(false)} className="rounded p-1 text-[var(--text2)] hover:bg-[var(--bg3)] transition">
-                <X className="h-5 w-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md" onClick={() => setShowConfig(false)}>
+          <div className="w-full max-w-sm rounded-[2rem] bg-white p-8 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-[var(--text)]">Terminal Config</h2>
+              <button onClick={() => setShowConfig(false)} className="rounded-full p-2 hover:bg-[var(--bg3)] transition">
+                <X className="h-6 w-6" />
               </button>
             </div>
-            <div className="mb-6">
-              <label className="mb-2 block text-sm font-medium text-[var(--text2)]">App Key</label>
+            <div className="mb-8">
+              <label className="mb-2 block text-sm font-bold text-[var(--text2)] uppercase tracking-wider">App Key</label>
               <input
                 type="text"
                 value={appKeyInput}
                 onChange={(e) => setAppKeyInput(e.target.value)}
-                className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)] px-3 py-2 text-[var(--text)] transition focus:border-[var(--green)] focus:outline-none"
-                placeholder="UUID o slug del restaurante"
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg3)] px-4 py-3 text-lg font-medium text-[var(--text)] focus:border-[var(--green)] focus:ring-2 focus:ring-[var(--green-pale)] outline-none transition"
+                placeholder="UUID"
               />
-              <p className="mt-2 text-xs text-[var(--text3)]">
-                Este código vincula esta tableta con su sucursal correspondiente.
-              </p>
             </div>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowConfig(false)}
-                className="rounded-[var(--radius)] px-4 py-2 text-sm font-medium text-[var(--text2)] transition hover:bg-[var(--bg3)]"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  setAppKey(appKeyInput);
-                  setShowConfig(false);
-                  toast.success('App Key guardado localmente');
-                }}
-                className="rounded-[var(--radius)] bg-[var(--green)] px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--green2)] active:scale-95"
-              >
-                Guardar
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                setAppKey(appKeyInput);
+                setShowConfig(false);
+                toast.success('App Key guardado');
+              }}
+              className="w-full rounded-xl bg-[var(--green)] py-4 text-lg font-bold text-white shadow-lg shadow-[var(--green)]/20 transition hover:brightness-110 active:scale-95"
+            >
+              Guardar Configuración
+            </button>
           </div>
         </div>
       )}

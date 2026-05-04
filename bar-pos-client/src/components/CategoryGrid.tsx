@@ -8,33 +8,33 @@ type Props = {
 
 export default function CategoryGrid({ categories, activeCategory, onSelect }: Props) {
   return (
-    <div className="-mx-1 overflow-x-auto overflow-y-hidden scrollbar-emerald px-1 pb-1">
-      <div className="flex w-max min-w-full gap-2 pb-1">
-        {categories.map((c) => {
-          const active = activeCategory?.id === c.id;
-          return (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => onSelect(c)}
-              className={`app-no-drag flex min-h-[72px] w-[118px] shrink-0 flex-col items-center justify-center gap-1 rounded-[var(--radius)] border-2 px-3 py-2 text-center shadow-sm transition active:scale-[0.98] ${
-                active
-                  ? 'border-[var(--green2)] bg-[var(--green-dim)] shadow-[0_0_16px_rgba(16,185,129,0.12)]'
-                  : 'border-[var(--border)] bg-[var(--bg3)] hover:border-[var(--border2)]'
-              }`}
-              style={
-                active
-                  ? undefined
-                  : { backgroundColor: c.color ? `${c.color}33` : 'var(--bg3)' }
-              }
-            >
-              <span className="text-[22px] leading-none">{c.icon}</span>
-              <span className="max-w-[100px] truncate text-[9px] font-bold uppercase tracking-wide text-[var(--text)]">
-                {c.name}
-              </span>
-            </button>
-          );
-        })}
+    <div className="flex flex-col h-full bg-[var(--bg3)]/30 border-l border-r border-[var(--border)] overflow-hidden">
+      <div className="shrink-0 px-4 py-4 border-b border-[var(--border)] bg-white/40">
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text3)] opacity-60">Categorías</span>
+      </div>
+      
+      {/* Scroll independiente para las categorías */}
+      <div className="flex-1 overflow-y-auto p-2 scrollbar-none">
+        <div className="grid grid-cols-2 gap-2">
+          {categories.map((c) => {
+            const active = activeCategory?.id === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => onSelect(c)}
+                className={`flex flex-col items-center justify-center gap-1 rounded-2xl p-3 text-center transition-all duration-200 active:scale-90 min-h-[90px] ${
+                  active
+                    ? 'bg-white text-[var(--green)] shadow-md shadow-black/5 border-2 border-[var(--green)]'
+                    : 'text-[var(--text2)] bg-white/20 hover:bg-white/60 border border-transparent'
+                }`}
+              >
+                <span className="text-2xl">{c.icon}</span>
+                <span className="text-[10px] font-black uppercase tracking-tight leading-tight">{c.name}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { X, Pencil, Trash2 } from 'lucide-react';
+import { X, Pencil, LayoutGrid, Plus } from 'lucide-react';
 import type { Table } from '@/types';
 import { tablesApi } from '@/api/tables.api';
 import { useTableStore } from '@/store/useTableStore';
-import Spinner from './Spinner';
 
 type Props = {
   open: boolean;
@@ -12,11 +11,11 @@ type Props = {
 };
 
 export default function TableManagerModal({ open, onClose }: Props) {
-  const { tables, openOrders, refresh } = useTableStore();
+  const { tables, refresh } = useTableStore();
+  const [busy, setBusy] = useState(false);
   const [name, setName] = useState('');
   const [capacity, setCapacity] = useState(4);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -90,152 +89,93 @@ export default function TableManagerModal({ open, onClose }: Props) {
     }
   };
 
-  const remove = async (id: number) => {
-    if (openOrders[id]) {
-      toast.error('No se puede eliminar: hay una orden abierta en esta mesa.');
-      return;
-    }
-    setBusy(true);
-    try {
-      await tablesApi.toggle(id);
-      toast.success('Mesa desactivada');
-      await refresh();
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-md app-no-drag">
-      <div className="modal-enter max-h-[90vh] w-full max-w-lg overflow-hidden rounded-[var(--radius-lg)] border border-white/20 bg-[var(--bg2)]/95 shadow-glass backdrop-blur-lg">
-        <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
-          <h2 className="text-lg font-bold text-[var(--text)]">Gestionar mesas</h2>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md" onClick={onClose}>
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-[2.5rem] bg-white shadow-2xl flex flex-col animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-8 py-6 bg-[var(--bg3)]/50">
+          <div className="flex items-center gap-3">
+             <div className="p-2 rounded-xl bg-white shadow-sm text-[var(--green)]">
+                <LayoutGrid className="h-6 w-6" />
+             </div>
+             <div>
+                <h2 className="text-xl font-black text-[var(--text)]">Gestión de Mesas</h2>
+                <p className="text-xs font-bold text-[var(--text3)] uppercase tracking-widest">Configuración de Sala</p>
+             </div>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-[var(--text2)] hover:bg-[var(--bg3)]"
-            aria-label="Cerrar"
+            className="rounded-full bg-white p-2 text-[var(--text3)] shadow-sm hover:text-[var(--red)] transition-colors"
           >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        <div className="max-h-[50vh] overflow-y-auto p-4 scrollbar-emerald">
-          {busy && (
-            <div className="mb-2 flex justify-center">
-              <Spinner />
-            </div>
-          )}
-          {tables.map((t) => (
-            <div
-              key={t.id}
-              className="mb-3 flex flex-wrap items-center gap-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)] p-3"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="font-semibold text-[var(--text)]">{t.name}</div>
-                <div className="text-sm text-[var(--text3)]">Capacidad: {t.capacity}</div>
-                <div className="text-xs text-[var(--text3)]">
-                  {t.active ? 'Visible en mapa' : 'Oculta'}
+        <div className="flex-1 overflow-y-auto p-8 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {tables.map((t) => (
+              <div
+                key={t.id}
+                className={`group flex items-center gap-4 rounded-2xl border p-4 transition-all ${t.active ? 'bg-white border-[var(--border)]' : 'bg-[var(--bg3)] border-dashed opacity-60'}`}
+              >
+                <div className="flex-1">
+                  <div className="font-black text-[var(--text)]">{t.name}</div>
+                  <div className="text-xs font-bold text-[var(--text3)] uppercase">Capacidad: {t.capacity}</div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                   <button
+                    onClick={() => toggle(t.id)}
+                    disabled={busy}
+                    className={`h-8 px-3 rounded-full text-[10px] font-black uppercase transition-all ${t.active ? 'bg-[var(--green-dim)] text-[var(--green)]' : 'bg-[var(--bg4)] text-[var(--text2)]'}`}
+                  >
+                    {t.active ? 'Activa' : 'Oculta'}
+                  </button>
+                  <button
+                    className="p-2 rounded-lg text-[var(--text3)] hover:bg-[var(--bg3)] hover:text-[var(--text)] transition-colors disabled:opacity-50"
+                    onClick={() => startEdit(t)}
+                    disabled={busy}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-              <label className="flex items-center gap-2 text-sm text-[var(--text2)]">
-                <input
-                  type="checkbox"
-                  checked={t.active}
-                  onChange={() => toggle(t.id)}
-                  disabled={busy}
-                  className="accent-[var(--green2)]"
-                />
-                Activa
-              </label>
-              <button
-                type="button"
-                className="rounded-[var(--radius)] border border-[var(--border)] p-2 hover:bg-[var(--bg4)]"
-                onClick={() => startEdit(t)}
-                disabled={busy}
-                aria-label="Editar"
-              >
-                <Pencil className="h-5 w-5 text-[var(--text2)]" />
-              </button>
-              <button
-                type="button"
-                className="rounded-[var(--radius)] border border-[var(--red)]/40 p-2 hover:bg-[var(--red)]/15 disabled:opacity-40"
-                onClick={() => remove(t.id)}
-                disabled={busy}
-                aria-label="Desactivar"
-              >
-                <Trash2 className="h-5 w-5 text-[var(--red)]" />
-              </button>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        <div className="border-t border-[var(--border)] p-4">
-          {editingId != null ? (
-            <div className="flex flex-col gap-3">
-              <p className="text-sm text-[var(--amber)]">Editando mesa #{editingId}</p>
-              <input
-                className="min-h-[48px] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)] px-3 text-lg text-[var(--text)]"
-                placeholder="Nombre"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <input
-                type="number"
-                min={1}
-                className="min-h-[48px] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)] px-3 text-lg text-[var(--text)]"
-                value={capacity}
-                onChange={(e) => setCapacity(Number(e.target.value))}
-              />
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="min-h-[48px] flex-1 rounded-[var(--radius)] bg-[var(--green3)] font-semibold text-white hover:bg-[var(--green2)] disabled:opacity-50"
-                  onClick={() => void saveEdit()}
+        <div className="shrink-0 bg-[var(--bg3)]/50 border-t border-[var(--border)] p-8">
+           <div className="flex flex-col gap-4">
+              <h3 className="text-sm font-black text-[var(--text2)] uppercase tracking-widest">
+                {editingId ? `Editando ${name}` : 'Añadir Nueva Mesa'}
+              </h3>
+              <div className="flex gap-3">
+                 <input
+                  className="h-12 flex-[2] rounded-xl border border-[var(--border)] bg-white px-4 font-bold text-[var(--text)] focus:border-[var(--green)] outline-none transition disabled:opacity-50"
+                  placeholder="Nombre de mesa"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   disabled={busy}
-                >
-                  Guardar
-                </button>
-                <button
-                  type="button"
-                  className="min-h-[48px] flex-1 rounded-[var(--radius)] border border-[var(--border2)] text-[var(--text3)] hover:border-[var(--green)]"
-                  onClick={() => {
-                    setEditingId(null);
-                    setName('');
-                    setCapacity(4);
-                  }}
+                />
+                <input
+                  type="number"
+                  className="h-12 flex-1 rounded-xl border border-[var(--border)] bg-white px-4 font-bold text-[var(--text)] focus:border-[var(--green)] outline-none transition disabled:opacity-50"
+                  value={capacity}
+                  onChange={(e) => setCapacity(Number(e.target.value))}
                   disabled={busy}
-                >
-                  Cancelar edición
-                </button>
+                />
+                {editingId ? (
+                   <div className="flex gap-2">
+                      <button onClick={saveEdit} className="btn-primary h-12 px-6 rounded-xl">Guardar</button>
+                      <button onClick={() => setEditingId(null)} className="h-12 px-6 rounded-xl border-2 border-[var(--border2)] font-bold text-[var(--text3)]">X</button>
+                   </div>
+                ) : (
+                  <button onClick={addTable} className="btn-primary h-12 px-6 rounded-xl flex items-center gap-2">
+                    <Plus className="h-5 w-5" /> Añadir
+                  </button>
+                )}
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <h3 className="font-semibold text-[var(--text2)]">Nueva mesa</h3>
-              <input
-                className="min-h-[48px] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)] px-3 text-lg text-[var(--text)]"
-                placeholder="Nombre (ej. Mesa 5)"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <input
-                type="number"
-                min={1}
-                className="min-h-[48px] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)] px-3 text-lg text-[var(--text)]"
-                value={capacity}
-                onChange={(e) => setCapacity(Number(e.target.value))}
-              />
-              <button
-                type="button"
-                className="min-h-[52px] rounded-[var(--radius)] bg-[var(--green3)] text-lg font-bold text-white shadow-glow-green hover:bg-[var(--green2)] disabled:opacity-50"
-                onClick={() => void addTable()}
-                disabled={busy}
-              >
-                Agregar mesa
-              </button>
-            </div>
-          )}
+           </div>
         </div>
       </div>
     </div>

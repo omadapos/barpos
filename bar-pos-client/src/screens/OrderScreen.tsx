@@ -45,8 +45,8 @@ function OrderProductsPanel({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-12">
-        <Spinner />
+      <div className="flex h-full items-center justify-center py-12">
+        <Spinner className="h-12 w-12 border-t-[var(--green)]" />
       </div>
     );
   }
@@ -279,32 +279,31 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[var(--bg)]">
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[3fr_2fr]">
-        <div className="flex min-h-0 flex-col overflow-hidden border-b border-[var(--border)] lg:border-b-0 lg:border-r">
-          <div className="shrink-0 border-b border-[var(--border)] bg-[var(--bg2)] px-4 py-3">
-            <button
-              type="button"
-              onClick={async () => {
-                await refresh();
-                onBack();
-              }}
-              className="app-no-drag mb-3 min-h-[48px] rounded-[var(--radius)] border border-[var(--border2)] px-4 text-sm font-bold text-[var(--text2)] transition hover:border-[var(--green)] hover:text-[var(--green)] active:scale-[0.98]"
-            >
-              ← {headerTitle}
-            </button>
-            {catLoading ? (
-              <div className="flex justify-center py-8">
-                <Spinner />
+      {/* Nuevo Grid de 3 Columnas: [Productos] [Categorías (Sidebar)] [Ticket] */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_250px_400px]">
+        
+        {/* Columna 1: Productos */}
+        <div className="flex min-h-0 flex-col overflow-hidden">
+          <div className="shrink-0 border-b border-[var(--border)] bg-white px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+               <button
+                type="button"
+                onClick={async () => {
+                  await refresh();
+                  onBack();
+                }}
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--text2)] transition hover:bg-[var(--bg3)] active:scale-95"
+              >
+                ←
+              </button>
+              <div>
+                <h1 className="text-xl font-black text-[var(--text)] leading-tight">{headerTitle}</h1>
+                <p className="text-[10px] font-bold text-[var(--text3)] uppercase tracking-widest">Panel de Selección</p>
               </div>
-            ) : (
-              <CategoryGrid
-                categories={categories}
-                activeCategory={activeCategory}
-                onSelect={(c) => setActiveCategory(c)}
-              />
-            )}
+            </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-4 scrollbar-emerald">
+          
+          <div className="min-h-0 flex-1 overflow-y-auto p-6 scrollbar-none">
             {activeCategory && (
               <OrderProductsPanel
                 categoryId={activeCategory.id}
@@ -316,32 +315,50 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
           </div>
         </div>
 
-        <TicketPanel
-          title={headerTitle}
-          createdAt={currentOrder.createdAt}
-          notes={currentOrder.notes}
-          items={currentOrder.items ?? []}
-          subtotal={subtotalNum}
-          tax={taxNum}
-          total={baseTotalNum}
-          onQuantity={handleQty}
-          onRemove={handleRemove}
-          onCancelOrder={confirmCancel}
-          onPay={() => {
-            if (!currentOrder.items?.length) {
-              toast.error('Agrega artículos antes de cobrar');
-              return;
-            }
-            setPaymentOpen(true);
-          }}
-          onPrintPreBill={handlePrintPreBill}
-          includeTip18={includeTip18}
-          onToggleTip18={setIncludeTip18}
-          tipAmount={tipAmount}
-          grandTotal={grandTotal}
-          onSaveNote={handleSaveNote}
-          busy={actionBusy}
-        />
+        {/* Columna 2: Categorías Verticales (Hacia el centro/lado del carrito) */}
+        <div className="hidden lg:block h-full overflow-hidden bg-[var(--bg3)]/20">
+          {catLoading ? (
+            <div className="flex h-full items-center justify-center">
+              <Spinner className="h-6 w-6" />
+            </div>
+          ) : (
+            <CategoryGrid
+              categories={categories}
+              activeCategory={activeCategory}
+              onSelect={(c) => setActiveCategory(c)}
+            />
+          )}
+        </div>
+
+        {/* Columna 3: Ticket Panel (Carrito) */}
+        <div className="h-full overflow-hidden shadow-2xl z-10">
+          <TicketPanel
+            title={headerTitle}
+            createdAt={currentOrder.createdAt}
+            notes={currentOrder.notes}
+            items={currentOrder.items ?? []}
+            subtotal={subtotalNum}
+            tax={taxNum}
+            total={baseTotalNum}
+            onQuantity={handleQty}
+            onRemove={handleRemove}
+            onCancelOrder={confirmCancel}
+            onPay={() => {
+              if (!currentOrder.items?.length) {
+                toast.error('Agrega artículos antes de cobrar');
+                return;
+              }
+              setPaymentOpen(true);
+            }}
+            onPrintPreBill={handlePrintPreBill}
+            includeTip18={includeTip18}
+            onToggleTip18={setIncludeTip18}
+            tipAmount={tipAmount}
+            grandTotal={grandTotal}
+            onSaveNote={handleSaveNote}
+            busy={actionBusy}
+          />
+        </div>
       </div>
 
       <MeasureModal

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { TouchEvent } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Minus, Plus, X } from 'lucide-react';
+import { Minus, Plus, X, ReceiptText, Clock } from 'lucide-react';
 import type { OrderItem } from '@/types';
 import { formatMoney } from '@/lib/format';
 import OrderNoteModal from '@/components/OrderNoteModal';
@@ -13,12 +13,12 @@ function useElapsedLabel(createdAt: string) {
     const tick = () => {
       const ms = Date.now() - new Date(createdAt).getTime();
       const min = Math.floor(ms / 60_000);
-      if (min < 1) setLabel('hace un momento');
-      else if (min < 60) setLabel(`hace ${min} min`);
+      if (min < 1) setLabel('reciente');
+      else if (min < 60) setLabel(`${min}m`);
       else {
         const h = Math.floor(min / 60);
         const m = min % 60;
-        setLabel(m ? `hace ${h}h ${m}min` : `hace ${h}h`);
+        setLabel(m ? `${h}h ${m}m` : `${h}h`);
       }
     };
     tick();
@@ -39,7 +39,6 @@ function LineRow({
 }) {
   const startX = useRef<number | null>(null);
   const [offset, setOffset] = useState(0);
-  const [hover, setHover] = useState(false);
 
   const onTouchStart = (e: TouchEvent) => {
     startX.current = e.touches[0].clientX;
@@ -57,56 +56,46 @@ function LineRow({
 
   return (
     <div
-      className="group/line item-enter relative overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)]"
+      className="item-enter border-b border-[var(--border)] py-3 px-1 transition-all"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
     >
       <div
-        className="flex flex-col gap-2 p-3 transition-transform"
+        className="flex items-center justify-between gap-3 transition-transform"
         style={{ transform: `translateX(${offset}px)` }}
       >
-        <div className="flex justify-between gap-2">
-          <div className="min-w-0">
-            <span className="font-semibold text-[var(--text)]">{item.productName}</span>
-            {item.measureName ? (
-              <div className="text-xs text-[var(--text3)]">{item.measureName}</div>
-            ) : null}
-          </div>
-          <button
-            type="button"
-            className={`app-no-drag shrink-0 rounded-lg p-1.5 transition sm:opacity-0 sm:group-hover/line:opacity-100 ${
-              hover ? 'bg-[var(--red)]/20 text-[var(--red)] opacity-100' : 'text-[var(--red)]/50 opacity-60'
-            }`}
-            onClick={() => onRemove(item.id)}
-            aria-label="Quitar"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        <div className="min-w-0 flex-1">
+          <div className="font-bold text-[var(--text)] text-sm">{item.productName}</div>
+          {item.measureName && (
+            <div className="text-[10px] font-semibold text-[var(--text3)] uppercase">{item.measureName}</div>
+          )}
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--text2)]">
-          <div className="flex items-center gap-2">
+        
+        <div className="flex items-center gap-3">
+          <div className="flex items-center bg-[var(--bg3)] rounded-full p-1">
             <button
               type="button"
-              className="app-no-drag flex h-11 min-w-[44px] items-center justify-center rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg2)] font-bold hover:bg-[var(--bg4)] active:scale-95"
+              className="h-7 w-7 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-90 transition-all"
               onClick={() => onQty(item.id, item.quantity - 1)}
             >
-              <Minus className="h-5 w-5" />
+              <Minus className="h-3 w-3" />
             </button>
-            <span className="min-w-[2rem] text-center text-lg font-bold text-[var(--text)]">
+            <span className="w-8 text-center text-sm font-black text-[var(--text)]">
               {item.quantity}
             </span>
             <button
               type="button"
-              className="app-no-drag flex h-11 min-w-[44px] items-center justify-center rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg2)] font-bold hover:bg-[var(--bg4)] active:scale-95"
+              className="h-7 w-7 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-90 transition-all"
               onClick={() => onQty(item.id, item.quantity + 1)}
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-3 w-3" />
             </button>
           </div>
-          <span className="font-bold text-[var(--green)]">{formatMoney(item.subtotal)}</span>
+          
+          <div className="text-right min-w-[70px]">
+            <div className="font-black text-[var(--green)] text-sm">{formatMoney(item.subtotal)}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -125,13 +114,10 @@ type Props = {
   onRemove: (itemId: number) => void;
   onCancelOrder: () => void | Promise<void>;
   onPay: () => void;
-  /** Imprimir pre-cuenta (térmica por IP / configuración guardada) */
   onPrintPreBill?: () => void | Promise<void>;
-  /** Propina opcional 18 % sobre el total de la cuenta */
   includeTip18?: boolean;
   onToggleTip18?: (next: boolean) => void;
   tipAmount?: number;
-  /** Total + propina si aplica */
   grandTotal?: number;
   onSaveNote: (note: string) => Promise<void>;
   busy?: boolean;
@@ -151,7 +137,6 @@ export default function TicketPanel({
   onPay,
   onPrintPreBill,
   includeTip18 = false,
-  onToggleTip18,
   tipAmount = 0,
   grandTotal,
   onSaveNote,
@@ -163,112 +148,110 @@ export default function TicketPanel({
   const started = format(new Date(createdAt), 'h:mm a', { locale: es });
 
   return (
-    <div className="flex h-full min-h-0 flex-col border-l border-[var(--border)] bg-[var(--bg2)]">
-      <div className="shrink-0 space-y-2 border-b border-[var(--border)] px-4 py-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-[var(--text)]">{title}</h2>
-          <span className="rounded-full border border-[var(--green2)] bg-[var(--green-dim)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--green)]">
-            ABIERTA
-          </span>
+    <div className="flex h-full min-h-0 flex-col bg-white">
+      <div className="shrink-0 bg-gradient-to-r from-[var(--green)] to-[var(--green3)] p-4 text-white shadow-lg">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <ReceiptText className="h-5 w-5 opacity-80" />
+            <h2 className="text-lg font-black tracking-tight">{title}</h2>
+          </div>
+          <div className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm">
+            Abierta
+          </div>
         </div>
-        <p className="text-xs text-[var(--text3)]">
-          Iniciada {started}
-          {elapsed ? ` · ${elapsed}` : ''}
-        </p>
-        {notes ? (
-          <p className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)] px-2 py-1.5 text-xs text-[var(--text2)]">
-            📝 {notes}
-          </p>
-        ) : null}
+        <div className="flex items-center gap-3 opacity-90">
+          <div className="flex items-center gap-1 text-[10px] font-bold">
+            <Clock className="h-3 w-3" />
+            {started}
+          </div>
+          <div className="h-1 w-1 rounded-full bg-white/40" />
+          <div className="text-[10px] font-bold uppercase tracking-wide">
+            Transcurrido: {elapsed}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-2 bg-[var(--bg)]">
         <button
           type="button"
           onClick={() => setNoteOpen(true)}
           disabled={busy}
-          className="app-no-drag rounded-[var(--radius)] border border-[var(--border2)] px-2 py-1.5 text-xs font-semibold text-[var(--text3)] hover:border-[var(--green)] hover:text-[var(--green)] disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-[var(--text2)] transition hover:bg-white active:scale-95"
         >
-          📝 Nota
+          📝 {notes ? 'Editar Nota' : 'Agregar Nota'}
         </button>
-      </div>
-
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 scrollbar-emerald">
-        {items.length === 0 && (
-          <p className="text-center text-sm text-[var(--text3)]">Sin artículos aún</p>
+        {notes && (
+          <span className="truncate text-[10px] font-medium text-[var(--text3)] italic">"{notes}"</span>
         )}
-        {items.map((it) => (
-          <LineRow key={it.id} item={it} onQty={onQuantity} onRemove={onRemove} />
-        ))}
       </div>
 
-      <div className="sticky bottom-0 shrink-0 border-t border-[var(--border)] bg-[var(--bg)] px-4 py-4">
-        <div className="mb-2 flex justify-between text-sm text-[var(--text2)]">
-          <span>Subtotal</span>
-          <span>{formatMoney(subtotal)}</span>
-        </div>
-        {tax > 0 && (
-          <div className="mb-2 flex justify-between text-sm text-[var(--text2)]">
-            <span>Impuesto</span>
-            <span>{formatMoney(tax)}</span>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 scrollbar-none">
+        {items.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center text-[var(--text3)] opacity-50">
+            <ReceiptText className="h-12 w-12 mb-2" />
+            <p className="text-xs font-bold uppercase tracking-widest">Ticket Vacío</p>
           </div>
-        )}
-        {onToggleTip18 ? (
-          <button
-            type="button"
-            onClick={() => onToggleTip18(!includeTip18)}
-            disabled={busy}
-            className={`app-no-drag mb-3 min-h-[44px] w-full rounded-[var(--radius)] border-2 px-3 text-sm font-bold transition disabled:opacity-40 active:scale-[0.98] ${
-              includeTip18
-                ? 'border-[var(--green2)] bg-[var(--green-dim)] text-[var(--green)]'
-                : 'border-[var(--border2)] text-[var(--text2)] hover:border-[var(--amber)]/60 hover:text-[var(--text)]'
-            }`}
-          >
-            {includeTip18 ? '✓ Propina 18% incluida' : 'Agregar propina 18%'}
-          </button>
-        ) : null}
-        {includeTip18 ? (
-          <>
-            <div className="mb-2 flex justify-between text-sm text-[var(--text2)]">
-              <span>Total cuenta</span>
-              <span>{formatMoney(total)}</span>
-            </div>
-            <div className="mb-2 flex justify-between text-sm font-semibold text-[var(--text)]">
-              <span>Propina (18%)</span>
-              <span>{formatMoney(tipAmount)}</span>
-            </div>
-            <div className="mb-4 flex justify-between text-2xl font-bold text-[var(--green)]">
-              <span>A PAGAR</span>
-              <span>{formatMoney(grandTotal ?? total + tipAmount)}</span>
-            </div>
-          </>
         ) : (
-          <div className="mb-4 flex justify-between text-2xl font-bold text-[var(--green)]">
-            <span>TOTAL</span>
-            <span>{formatMoney(total)}</span>
-          </div>
+          items.map((it) => (
+            <LineRow key={it.id} item={it} onQty={onQuantity} onRemove={onRemove} />
+          ))
         )}
-        {onPrintPreBill ? (
-          <button
-            type="button"
-            onClick={() => void onPrintPreBill()}
-            disabled={!items.length || busy}
-            className="app-no-drag mb-3 min-h-[48px] w-full rounded-[var(--radius)] border border-[var(--border2)] text-sm font-bold text-[var(--text2)] transition hover:border-[var(--green)] hover:text-[var(--green)] disabled:opacity-40 active:scale-[0.98]"
-          >
-            🖨 Pre-cuenta
-          </button>
-        ) : null}
-        <div className="flex gap-3">
+      </div>
+
+      <div className="shrink-0 bg-[var(--bg-glass)] p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] backdrop-blur-md">
+        <div className="space-y-1 mb-4">
+          <div className="flex justify-between text-xs font-semibold text-[var(--text2)]">
+            <span>Subtotal</span>
+            <span className="font-mono">{formatMoney(subtotal)}</span>
+          </div>
+          {tax > 0 && (
+            <div className="flex justify-between text-xs font-semibold text-[var(--text2)]">
+              <span>Impuestos</span>
+              <span className="font-mono">{formatMoney(tax)}</span>
+            </div>
+          )}
+          {includeTip18 && (
+            <div className="flex justify-between text-xs font-bold text-[var(--text)]">
+              <span>Propina (18%)</span>
+              <span className="font-mono">{formatMoney(tipAmount)}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl bg-[var(--green-pale)] p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-black text-[var(--green-dark)] uppercase tracking-wider">Total a Pagar</span>
+            <span className="text-3xl font-black text-[var(--green)] font-mono tracking-tighter">
+              {formatMoney(grandTotal ?? total + tipAmount)}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-5 gap-2">
           <button
             type="button"
             onClick={() => setCancelOpen(true)}
-            disabled={busy}
-            className="app-no-drag min-h-[52px] flex-1 rounded-[var(--radius)] border border-[var(--border2)] text-base font-semibold text-[var(--text3)] transition hover:border-[var(--red)]/50 hover:text-[var(--red)] disabled:opacity-50 active:scale-[0.98]"
+            className="col-span-1 flex h-14 items-center justify-center rounded-xl bg-[var(--red-pale)] text-[var(--red)] transition-all hover:bg-[var(--red)] hover:text-white active:scale-95"
+            title="Cancelar Orden"
           >
-            Cancelar
+            <X className="h-6 w-6" />
           </button>
+          
+          <button
+            type="button"
+            onClick={() => onPrintPreBill?.()}
+            disabled={!items.length || busy}
+            className="col-span-1 flex h-14 items-center justify-center rounded-xl border-2 border-[var(--border)] text-[var(--text2)] transition-all hover:bg-[var(--bg3)] active:scale-95 disabled:opacity-30"
+            title="Pre-cuenta"
+          >
+            <ReceiptText className="h-6 w-6" />
+          </button>
+
           <button
             type="button"
             onClick={onPay}
             disabled={!items.length || busy}
-            className="app-no-drag min-h-[52px] flex-[2] rounded-[var(--radius)] bg-[var(--green3)] text-base font-bold text-white transition hover:bg-[var(--green2)] disabled:opacity-40 active:scale-[0.98]"
+            className="btn-primary col-span-3 h-14 text-xl rounded-2xl active:scale-95 disabled:opacity-40"
           >
             💳 COBRAR
           </button>
@@ -283,36 +266,29 @@ export default function TicketPanel({
       />
 
       {cancelOpen && (
-        <div
-          className="fixed inset-0 z-[125] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[2px] app-no-drag"
-          onClick={() => setCancelOpen(false)}
-        >
-          <div
-            className="modal-enter w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg2)] p-5 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-bold text-[var(--text)]">¿Cancelar esta orden?</h3>
-            <p className="mt-2 text-sm text-[var(--text2)]">
-              {title} — {formatMoney(total)} — {items.length} ítem{items.length !== 1 ? 's' : ''}
+        <div className="fixed inset-0 z-[125] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md" onClick={() => setCancelOpen(false)}>
+          <div className="w-full max-w-sm rounded-[2rem] bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-black text-[var(--text)]">¿Cancelar Orden?</h3>
+            <p className="mt-2 text-sm font-medium text-[var(--text2)]">
+              Se eliminarán todos los ítems de {title}. Esta acción no se puede deshacer.
             </p>
-            <div className="mt-5 flex gap-2">
+            <div className="mt-8 flex gap-3">
               <button
                 type="button"
-                className="min-h-[48px] flex-1 rounded-[var(--radius)] border border-[var(--border2)] text-[var(--text3)] hover:border-[var(--green)] hover:text-[var(--text2)]"
+                className="flex-1 rounded-xl py-3 text-sm font-bold text-[var(--text3)] transition hover:bg-[var(--bg3)]"
                 onClick={() => setCancelOpen(false)}
               >
                 Volver
               </button>
               <button
                 type="button"
-                className="min-h-[48px] flex-[2] rounded-[var(--radius)] bg-[var(--red)]/90 font-bold text-white hover:bg-[var(--red)] disabled:opacity-50"
-                disabled={busy}
+                className="flex-[2] rounded-xl bg-[var(--red)] py-3 text-sm font-black text-white shadow-lg shadow-[var(--red)]/20 transition hover:brightness-110"
                 onClick={() => {
                   setCancelOpen(false);
                   void onCancelOrder();
                 }}
               >
-                Sí, cancelar
+                Sí, Cancelar
               </button>
             </div>
           </div>

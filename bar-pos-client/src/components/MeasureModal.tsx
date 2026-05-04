@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { X } from 'lucide-react';
+import { X, ChevronRight } from 'lucide-react';
 import type { BottleMeasure, Product } from '@/types';
 import { productsApi } from '@/api/products.api';
 import { formatMoney } from '@/lib/format';
@@ -44,44 +44,41 @@ export default function MeasureModal({ product, open, onClose, onSelectMeasure }
     product.measures?.length ? product.measures : fetched;
 
   return (
-    <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[2px] app-no-drag"
-      onClick={onClose}
-    >
-      <div
-        className="modal-enter w-[340px] max-w-full rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg2)] shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-[2.5rem] bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+        <div className="mb-6 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold text-[var(--text)]">{product.name}</h2>
-            <p className="mt-0.5 text-sm text-[var(--text3)]">Elige la medida</p>
+            <h2 className="text-2xl font-black tracking-tight text-[var(--text)]">{product.name}</h2>
+            <p className="text-xs font-bold text-[var(--text3)] uppercase tracking-widest">Seleccionar Medida</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-2 text-[var(--text2)] hover:bg-[var(--bg3)]"
-            aria-label="Cerrar"
-          >
+          <button onClick={onClose} className="rounded-full bg-[var(--bg3)] p-2 text-[var(--text2)] transition hover:bg-[var(--bg4)]">
             <X className="h-6 w-6" />
           </button>
         </div>
-        <div className="max-h-[70vh] space-y-2 overflow-y-auto p-4 scrollbar-emerald">
+
+        <div className="space-y-3">
           {isLoading && needsFetch ? (
-            <div className="flex justify-center py-12">
-              <Spinner />
+            <div className="flex flex-col items-center py-12 gap-4">
+              <Spinner className="h-10 w-10 border-t-[var(--green)]" />
+              <span className="text-xs font-bold text-[var(--text3)] uppercase tracking-tighter">Cargando medidas...</span>
             </div>
           ) : (
             measures.map((m) => (
               <button
                 key={m.id}
-                type="button"
                 onClick={() => onSelectMeasure(m)}
-                className="flex min-h-[64px] w-full items-center gap-3 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg3)] px-4 py-3 text-left transition hover:border-[var(--green2)] hover:bg-[var(--green-dim)] active:scale-[0.97]"
+                className="group flex w-full items-center justify-between rounded-2xl bg-[var(--bg3)] p-5 transition-all hover:bg-[var(--green-dim)] active:scale-95"
               >
-                <span className="text-2xl">{measureEmoji[m.measureName] ?? '🥃'}</span>
-                <span className="flex-1 text-lg font-bold text-[var(--text)]">{m.measureName}</span>
-                <span className="text-lg font-bold text-[var(--green)]">{formatMoney(m.price)}</span>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm text-2xl group-hover:scale-110 transition-transform">
+                    {measureEmoji[m.measureName] ?? '🥃'}
+                  </div>
+                  <div className="text-left">
+                    <div className="text-lg font-black text-[var(--text)]">{m.measureName}</div>
+                    <div className="text-sm font-bold text-[var(--green)]">{formatMoney(m.price)}</div>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-[var(--text3)] group-hover:text-[var(--green)] transition-colors" />
               </button>
             ))
           )}
