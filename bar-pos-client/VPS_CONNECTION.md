@@ -1,44 +1,32 @@
-# Bar POS Client - conexion VPS
+# Conexion Remota
 
-Esta rama deja el cliente Electron conectado al backend remoto por defecto:
+La app usa un unico backend remoto:
 
 ```text
 https://barpos.omadapos.com
 ```
 
-La URL base siempre debe ir sin `/api`. Las rutas del cliente ya agregan `/api/...`.
+No hay API local ni proxy de desarrollo a `127.0.0.1:3001`.
 
 ## Desarrollo
 
-Para levantar la app contra el VPS:
-
 ```bash
-npm run dev:vps
+npm run dev
 ```
 
-Para levantar la app contra un backend local en `127.0.0.1:3001` usando proxy Vite:
-
-```bash
-npm run dev:local
-```
+Vite sirve el frontend en `http://127.0.0.1:5173`, pero Axios llama al VPS configurado en `VITE_API_URL`.
 
 ## Build Electron
 
-Para compilar el cliente de escritorio apuntando al VPS:
-
 ```bash
-npm run build:vps
+npm run build
 ```
 
-La app empaquetada tambien puede apuntar a otro backend sin recompilar si se lanza con `API_URL`:
-
-```cmd
-set API_URL=https://staging.ejemplo.com && BarPOS.exe
-```
+La app empaquetada puede sobrescribir la URL remota con `API_URL` al lanzar el `.exe`, pero el valor por defecto sigue siendo el VPS.
 
 ## Archivos clave
 
-- `src/lib/apiBaseUrl.ts`: decide la URL del API en renderer.
-- `electron/preload.js`: expone `window.electronEnv.apiBaseUrl` para Electron empaquetado.
+- `src/lib/apiBaseUrl.ts`: resuelve la URL remota.
+- `.env`: define `VITE_API_URL` y `VITE_APP_KEY`.
 - `src/api/client.ts`: agrega `baseURL` y `Authorization: Bearer ...` en cada request.
-- `src/api/auth.api.ts`: login por PIN contra `POST /api/auth/login-pin`.
+- `src/api/auth.api.ts`: login por PIN contra `POST /api/auth/login-waiter-pin`.

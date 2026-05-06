@@ -110,7 +110,15 @@ function createWindow() {
 
   mainWindow = win;
 
-  win.once('ready-to-show', () => win.show());
+  win.on('closed', () => {
+    console.log('Main window closed');
+    mainWindow = null;
+  });
+
+  win.once('ready-to-show', () => {
+    console.log('Main window ready to show');
+    win.show();
+  });
 
   const devUrl =
     process.env.VITE_DEV_SERVER_URL ||
@@ -124,12 +132,20 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  console.log('Electron app ready');
   createWindow();
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      console.log('Activating and creating window');
+      createWindow();
+    }
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  console.log('All windows closed');
+  if (process.platform !== 'darwin') {
+    console.log('Quitting app');
+    app.quit();
+  }
 });
