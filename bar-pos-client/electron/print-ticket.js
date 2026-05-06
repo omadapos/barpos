@@ -301,6 +301,14 @@ async function printThermalReceipt(config, payload) {
     }
   }
 
+  if (payload.paymentMethod === 'cash') {
+    try {
+      printer.openCashDrawer();
+    } catch {
+      /* sin cajon */
+    }
+  }
+
   await printer.execute();
 }
 

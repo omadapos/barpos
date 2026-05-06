@@ -42,7 +42,7 @@ export default function SystemSettingsModal({ open, onClose, onSaved }: Props) {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md">
       <div
-        className="w-full max-w-md rounded-[2rem] bg-white p-8 shadow-2xl"
+        className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-200 sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6 flex items-center justify-between">
