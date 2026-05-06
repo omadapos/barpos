@@ -98,26 +98,31 @@ export default function TableMapScreen({ walkInTick, onNavigateOrder }: Props) {
   }, [walkInTick, walkIn]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[var(--bg)]">
+    <div className="flex h-full min-h-0 flex-col bg-[var(--bg-subtle)] overflow-hidden">
       {loading && (
-        <div className="pointer-events-none fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/25">
-          <Spinner className="h-12 w-12 border-t-[var(--green)]" />
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+          <Spinner className="h-14 w-14 border-t-[var(--green)]" />
         </div>
       )}
 
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--bg)] px-4 py-3">
-        <h1 className="text-xl font-bold text-[var(--text)]">Mesas</h1>
+      {/* Header Premium con Glassmorphism */}
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--border)] bg-white/70 px-8 py-5 backdrop-blur-md">
+        <div>
+          <h1 className="text-2xl font-black text-[var(--text)] tracking-tight">Mapa de Mesas</h1>
+          <p className="text-[10px] font-extrabold text-[var(--text3)] uppercase tracking-[0.2em]">Selección de Ubicación</p>
+        </div>
         <button
           type="button"
           onClick={() => setManagerOpen(true)}
-          className="app-no-drag min-h-[44px] rounded-[var(--radius)] border border-[var(--green2)] px-4 text-sm font-semibold text-[var(--green)] transition hover:bg-[var(--green-dim)] active:scale-[0.97]"
+          className="app-no-drag rounded-2xl border border-[var(--border)] bg-white px-5 py-2.5 text-xs font-black text-[var(--text2)] shadow-sm transition-all hover:bg-[var(--bg3)] active:scale-95"
         >
-          + Gestionar mesas
+          ⚙️ GESTIONAR MESAS
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4 scrollbar-emerald">
-        <div className="mx-auto grid max-w-6xl grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4">
+      {/* Grid de Mesas con Scroll */}
+      <div className="min-h-0 flex-1 overflow-y-auto p-8 scrollbar-none scroll-smooth">
+        <div className="mx-auto grid max-w-7xl grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-6">
           {activeTables.map((t) => {
             const occ = !!openOrders[t.id];
             const m = meta(t.id);
@@ -137,16 +142,22 @@ export default function TableMapScreen({ walkInTick, onNavigateOrder }: Props) {
         </div>
       </div>
 
-      <div className="shrink-0 border-t border-[var(--border)] bg-[var(--bg2)] p-4">
-        <div className="mx-auto max-w-6xl">
+      {/* Barra Inferior (Sticky) */}
+      <div className="shrink-0 border-t border-[var(--border)] bg-white/50 p-6 backdrop-blur-lg">
+        <div className="mx-auto max-w-7xl">
           <button
             type="button"
             onClick={() => void walkIn()}
             disabled={loading}
-            className="app-no-drag flex min-h-[80px] w-full items-center justify-center gap-2 rounded-[var(--radius-lg)] border border-[var(--border2)] bg-[var(--bg2)] text-lg font-bold text-[var(--text)] transition hover:border-[var(--green)] hover:bg-[var(--bg3)] disabled:opacity-50 active:scale-[0.99]"
+            className="app-no-drag flex min-h-[90px] w-full items-center justify-center gap-4 rounded-[2rem] border-2 border-dashed border-[var(--border2)] bg-white/40 text-xl font-black text-[var(--text)] shadow-xl transition-all hover:border-[var(--green)] hover:bg-white active:scale-[0.98] disabled:opacity-50"
           >
-            <Ticket className="h-6 w-6 text-[var(--green)]" />
-            TICKET DIRECTO — Venta sin mesa
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--green-pale)] text-[var(--green)]">
+              <Ticket className="h-6 w-6" />
+            </div>
+            <div className="text-left">
+              <div className="leading-tight">VENTA DIRECTA</div>
+              <div className="text-[10px] font-bold text-[var(--text3)] uppercase tracking-widest">Sin asignar mesa</div>
+            </div>
           </button>
         </div>
       </div>

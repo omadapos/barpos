@@ -278,13 +278,14 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
   if (!currentOrder) return null;
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[var(--bg)]">
-      {/* Nuevo Grid de 3 Columnas: [Productos] [Categorías (Sidebar)] [Ticket] */}
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_250px_400px]">
+    <div className="flex h-full w-full flex-col bg-[var(--bg)] overflow-hidden">
+      {/* Grid Principal: [Productos] [Categorías] [Ticket] */}
+      <div className="grid h-full min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_240px_420px]">
         
-        {/* Columna 1: Productos */}
-        <div className="flex min-h-0 flex-col overflow-hidden">
-          <div className="shrink-0 border-b border-[var(--border)] bg-white px-6 py-4 flex items-center justify-between">
+        {/* Columna 1: Selección de Productos */}
+        <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--bg-subtle)]">
+          {/* Header del Panel */}
+          <div className="shrink-0 border-b border-[var(--border)] bg-white/50 px-6 py-4 backdrop-blur-md flex items-center justify-between">
             <div className="flex items-center gap-4">
                <button
                 type="button"
@@ -292,18 +293,19 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
                   await refresh();
                   onBack();
                 }}
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--text2)] transition hover:bg-[var(--bg3)] active:scale-95"
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-white text-[var(--text2)] shadow-sm transition-all hover:bg-[var(--bg3)] active:scale-90"
               >
-                ←
+                <span className="text-xl font-bold">←</span>
               </button>
               <div>
-                <h1 className="text-xl font-black text-[var(--text)] leading-tight">{headerTitle}</h1>
-                <p className="text-[10px] font-bold text-[var(--text3)] uppercase tracking-widest">Panel de Selección</p>
+                <h1 className="text-2xl font-black text-[var(--text)] leading-tight tracking-tight">{headerTitle}</h1>
+                <p className="text-[10px] font-extrabold text-[var(--text3)] uppercase tracking-[0.2em]">Menú Principal</p>
               </div>
             </div>
           </div>
           
-          <div className="min-h-0 flex-1 overflow-y-auto p-6 scrollbar-none">
+          {/* Grid de Productos con Scroll Interno */}
+          <div className="min-h-0 flex-1 overflow-y-auto p-6 scrollbar-none scroll-smooth">
             {activeCategory && (
               <OrderProductsPanel
                 categoryId={activeCategory.id}
@@ -315,23 +317,28 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
           </div>
         </div>
 
-        {/* Columna 2: Categorías Verticales (Hacia el centro/lado del carrito) */}
-        <div className="hidden lg:block h-full overflow-hidden bg-[var(--bg3)]/20">
-          {catLoading ? (
-            <div className="flex h-full items-center justify-center">
-              <Spinner className="h-6 w-6" />
-            </div>
-          ) : (
-            <CategoryGrid
-              categories={categories}
-              activeCategory={activeCategory}
-              onSelect={(c) => setActiveCategory(c)}
-            />
-          )}
+        {/* Columna 2: Sidebar de Categorías (Glassmorphism) */}
+        <div className="hidden lg:flex flex-col h-full overflow-hidden border-x border-[var(--border)] bg-white/30 backdrop-blur-xl">
+          <div className="shrink-0 p-5 border-b border-[var(--border)] bg-white/20">
+             <p className="text-[10px] font-black text-[var(--text2)] uppercase tracking-widest text-center">Categorías</p>
+          </div>
+          <div className="flex-1 overflow-y-auto scrollbar-none p-2">
+            {catLoading ? (
+              <div className="flex h-full items-center justify-center">
+                <Spinner className="h-6 w-6 border-t-[var(--green)]" />
+              </div>
+            ) : (
+              <CategoryGrid
+                categories={categories}
+                activeCategory={activeCategory}
+                onSelect={(c) => setActiveCategory(c)}
+              />
+            )}
+          </div>
         </div>
 
-        {/* Columna 3: Ticket Panel (Carrito) */}
-        <div className="h-full overflow-hidden shadow-2xl z-10">
+        {/* Columna 3: Ticket / Carrito (Persistent) */}
+        <div className="h-full overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.06)] z-10 border-l border-[var(--border)]">
           <TicketPanel
             title={headerTitle}
             createdAt={currentOrder.createdAt}
@@ -361,6 +368,7 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
         </div>
       </div>
 
+      {/* Modales */}
       <MeasureModal
         product={selectedProduct}
         open={showMeasureModal}

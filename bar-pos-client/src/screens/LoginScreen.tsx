@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { ChevronLeft, Wine } from 'lucide-react';
+import { ChevronLeft, Wine, Settings } from 'lucide-react';
 import { authApi } from '@/api/auth.api';
+import { getAppKey } from '@/config/tenant';
 import { useAuthStore } from '@/store/useAuthStore';
 import Spinner from '@/components/Spinner';
+import SystemSettingsModal from '@/components/SystemSettingsModal';
 
 export function LoginScreen() {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [shake, setShake] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const pinRef = useRef('');
 
   useEffect(() => {
@@ -66,7 +69,7 @@ export function LoginScreen() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (isLoading) return;
+      if (isLoading || settingsOpen) return;
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault();
         handleDigit(e.key);
@@ -78,7 +81,7 @@ export function LoginScreen() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [handleBackspace, handleDigit, isLoading]);
+  }, [handleBackspace, handleDigit, isLoading, settingsOpen]);
 
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const;
 
@@ -86,7 +89,18 @@ export function LoginScreen() {
     'flex h-20 w-20 items-center justify-center rounded-2xl bg-white border border-[var(--border)] shadow-sm text-2xl font-semibold text-[var(--text)] transition-all hover:bg-[var(--bg3)] active:scale-95';
 
   return (
-    <div className="login-app-root flex min-h-screen w-full flex-col items-center justify-center p-4">
+    <div className="login-app-root relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden p-4">
+      {/* Botón de Ajustes Visible */}
+      <button
+        type="button"
+        onClick={() => setSettingsOpen(true)}
+        className="fixed top-6 right-6 flex items-center gap-2 rounded-2xl bg-white px-4 py-2 text-[var(--text)] shadow-xl transition-all hover:bg-[var(--bg3)] active:scale-90 z-[50]"
+        title="Ajustes de Sistema"
+      >
+        <Settings className="h-5 w-5 text-[var(--green)]" />
+        <span className="text-xs font-black uppercase tracking-widest">Ajustes</span>
+      </button>
+
       <div
         className={`w-full max-w-sm rounded-[2rem] bg-white/95 p-8 shadow-2xl backdrop-blur-sm transition-all sm:p-10 ${
           shake ? 'shake' : ''
@@ -152,9 +166,19 @@ export function LoginScreen() {
         </div>
       </div>
 
-      <p className="mt-8 text-sm font-semibold uppercase tracking-widest text-white/60">
-        v2.1.0 Premium
-      </p>
+      <div className="mt-8 flex flex-col items-center gap-1 opacity-60">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-white">
+          v2.1.0 Premium
+        </p>
+        <p className="text-[9px] font-bold text-white/50 font-mono">
+          ID: {getAppKey().slice(0, 12)}...
+        </p>
+      </div>
+
+      <SystemSettingsModal 
+        open={settingsOpen} 
+        onClose={() => setSettingsOpen(false)} 
+      />
     </div>
   );
 }

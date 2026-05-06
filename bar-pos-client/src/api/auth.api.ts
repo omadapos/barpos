@@ -29,11 +29,10 @@ export const authApi = {
         { 
           pin, 
           appKey: getAppKey(),
-          app_key: getAppKey()
+          app_key: getAppKey(), // Compatibilidad con versiones específicas del backend
         },
         { 
           skipErrorToast: true,
-          headers: { 'x-app-key': getAppKey() }
         }
       )
       .then((r) => unwrapLoginPinPayload(r.data)),
@@ -46,9 +45,7 @@ export const authApi = {
           username,
           password,
           appKey: getAppKey(),
-        },
-        {
-          headers: { 'x-app-key': getAppKey() }
+          app_key: getAppKey(),
         }
       )
       .then((r) => r.data.data),

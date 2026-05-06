@@ -110,6 +110,12 @@ function createWindow() {
 
   mainWindow = win;
 
+  win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    const levels = ['debug', 'info', 'warning', 'error'];
+    const label = levels[level] || String(level);
+    console.log(`[renderer:${label}] ${message} (${sourceId}:${line})`);
+  });
+
   win.on('closed', () => {
     console.log('Main window closed');
     mainWindow = null;
