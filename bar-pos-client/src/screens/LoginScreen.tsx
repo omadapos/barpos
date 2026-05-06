@@ -14,6 +14,7 @@ export function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [shake, setShake] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [currentAppKey, setCurrentAppKey] = useState(() => getAppKey());
   const pinRef = useRef('');
 
   useEffect(() => {
@@ -171,13 +172,14 @@ export function LoginScreen() {
           v2.1.0 Premium
         </p>
         <p className="text-[9px] font-bold text-white/50 font-mono">
-          ID: {getAppKey().slice(0, 12)}...
+          ID: {currentAppKey ? `${currentAppKey.slice(0, 12)}...` : 'sin configurar'}
         </p>
       </div>
 
       <SystemSettingsModal 
         open={settingsOpen} 
         onClose={() => setSettingsOpen(false)} 
+        onSaved={setCurrentAppKey}
       />
     </div>
   );
