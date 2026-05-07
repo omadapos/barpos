@@ -117,6 +117,9 @@ type Props = {
   onPrintPreBill?: () => void | Promise<void>;
   includeTip18?: boolean;
   onToggleTip18?: (next: boolean) => void;
+  /** Porcentaje de propina (10–25 típico; por defecto 18). */
+  tipPercent?: number;
+  onTipPercentChange?: (pct: number) => void;
   tipAmount?: number;
   grandTotal?: number;
   onSaveNote: (note: string) => Promise<void>;
@@ -137,6 +140,9 @@ export default function TicketPanel({
   onPay,
   onPrintPreBill,
   includeTip18 = false,
+  onToggleTip18,
+  tipPercent = 18,
+  onTipPercentChange,
   tipAmount = 0,
   grandTotal,
   onSaveNote,
@@ -146,6 +152,10 @@ export default function TicketPanel({
   const [cancelOpen, setCancelOpen] = useState(false);
   const elapsed = useElapsedLabel(createdAt);
   const started = format(new Date(createdAt), 'h:mm a', { locale: es });
+  const tipPresets = [10, 12, 15, 18, 20, 22, 25];
+  const tipOptions = tipPresets.includes(tipPercent)
+    ? tipPresets
+    : [...tipPresets, tipPercent].sort((a, b) => a - b);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
@@ -199,6 +209,40 @@ export default function TicketPanel({
       </div>
 
       <div className="shrink-0 bg-[var(--bg-glass)] p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] backdrop-blur-md">
+        <div className="mb-3 rounded-2xl border border-[var(--border)] bg-white/70 px-3 py-2.5">
+          <label className="flex cursor-pointer items-center gap-2.5">
+            <input
+              type="checkbox"
+              checked={includeTip18}
+              onChange={(e) => onToggleTip18?.(e.target.checked)}
+              disabled={busy}
+              className="h-4 w-4 shrink-0 accent-[var(--green2)]"
+            />
+            <span className="text-xs font-bold text-[var(--text)]">
+              Incluir propina en total y ticket
+            </span>
+          </label>
+          {includeTip18 && onTipPercentChange && (
+            <div className="mt-2 flex items-center gap-2 border-t border-[var(--border)] pt-2">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--text3)]">
+                %
+              </span>
+              <select
+                value={tipPercent}
+                onChange={(e) => onTipPercentChange(Number(e.target.value))}
+                disabled={busy}
+                className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2 py-1.5 text-xs font-bold text-[var(--text)]"
+              >
+                {tipOptions.map((p) => (
+                  <option key={p} value={p}>
+                    {p}%
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
         <div className="space-y-1 mb-4">
           <div className="flex justify-between text-xs font-semibold text-[var(--text2)]">
             <span>Subtotal</span>
@@ -212,7 +256,7 @@ export default function TicketPanel({
           )}
           {includeTip18 && (
             <div className="flex justify-between text-xs font-bold text-[var(--text)]">
-              <span>Propina (18%)</span>
+              <span>Propina ({tipPercent}%)</span>
               <span className="font-mono">{formatMoney(tipAmount)}</span>
             </div>
           )}

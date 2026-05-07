@@ -7,11 +7,14 @@ interface OrderStore {
   activeCategory: Category | null;
   selectedProduct: Product | null;
   showMeasureModal: boolean;
-  /** Propina 18 % opcional sobre el total de la orden (solo UI / ticket; no persiste en API). */
+  /** Incluir propina en total y ticket (solo UI / impresión; no persiste en API). */
   includeTip18: boolean;
+  /** Porcentaje de propina cuando está activa (elige el mesero). */
+  tipPercent: number;
 
   setCurrentOrder: (order: Order | null) => void;
   setIncludeTip18: (value: boolean) => void;
+  setTipPercent: (value: number) => void;
   setActiveCategory: (cat: Category | null) => void;
   openMeasureModal: (product: Product) => void;
   closeMeasureModal: () => void;
@@ -32,9 +35,16 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   selectedProduct: null,
   showMeasureModal: false,
   includeTip18: false,
+  tipPercent: 18,
 
-  setCurrentOrder: (order) => set({ currentOrder: order, includeTip18: false }),
+  setCurrentOrder: (order) =>
+    set({ currentOrder: order, includeTip18: false, tipPercent: 18 }),
   setIncludeTip18: (value) => set({ includeTip18: value }),
+  setTipPercent: (value) => {
+    const n = Number(value);
+    const pct = Number.isFinite(n) ? Math.min(50, Math.max(0, Math.round(n))) : 18;
+    set({ tipPercent: pct });
+  },
   setActiveCategory: (cat) => set({ activeCategory: cat }),
   openMeasureModal: (product) => set({ selectedProduct: product, showMeasureModal: true }),
   closeMeasureModal: () => set({ selectedProduct: null, showMeasureModal: false }),
@@ -89,6 +99,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       selectedProduct: null,
       showMeasureModal: false,
       includeTip18: false,
+      tipPercent: 18,
     });
   },
 
@@ -102,6 +113,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       selectedProduct: null,
       showMeasureModal: false,
       includeTip18: false,
+      tipPercent: 18,
     });
   },
 

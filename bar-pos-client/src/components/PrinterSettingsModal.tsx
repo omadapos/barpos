@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -120,15 +121,17 @@ export default function PrinterSettingsModal({ open, onClose }: Props) {
     toast.success('Valores por defecto');
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[140] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[2px] app-no-drag"
+      className="fixed inset-0 z-[140] overflow-y-auto bg-slate-900/45 backdrop-blur-[2px] app-no-drag"
       onClick={onClose}
+      role="presentation"
     >
-      <div
-        className="modal-enter max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg2)] p-5 shadow-2xl scrollbar-emerald"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex min-h-[100dvh] w-full items-center justify-center p-4">
+        <div
+          className="modal-enter max-h-[min(90dvh,90vh)] w-full max-w-md overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg2)] p-5 shadow-2xl scrollbar-emerald"
+          onClick={(e) => e.stopPropagation()}
+        >
         <div className="mb-4 flex items-center justify-between gap-2">
           <h2 className="text-lg font-bold text-[var(--text)]">Impresora térmica 80 mm</h2>
           <button
@@ -353,7 +356,9 @@ export default function PrinterSettingsModal({ open, onClose }: Props) {
         >
           Restaurar valores por defecto
         </button>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

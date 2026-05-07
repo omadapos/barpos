@@ -102,9 +102,11 @@ export function buildReceiptPayload(
 export function buildPreBillPayload(
   order: Order,
   settings: ThermalPrinterSettings,
-  includeTip18: boolean
+  includeTip18: boolean,
+  tipPercent: number = DEFAULT_TIP_PERCENT
 ): ReceiptPayload {
   return buildReceiptPayload(order, 'cash', settings, 'prebill', {
     include: includeTip18,
+    percent: tipPercent,
   });
 }

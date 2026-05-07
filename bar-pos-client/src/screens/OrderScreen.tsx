@@ -81,6 +81,8 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
   const updateNotes = useOrderStore((s) => s.updateNotes);
   const includeTip18 = useOrderStore((s) => s.includeTip18);
   const setIncludeTip18 = useOrderStore((s) => s.setIncludeTip18);
+  const tipPercent = useOrderStore((s) => s.tipPercent);
+  const setTipPercent = useOrderStore((s) => s.setTipPercent);
 
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
@@ -128,13 +130,13 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
 
   const tipAmount = useMemo(() => {
     if (!currentOrder || !includeTip18) return 0;
-    return computeTipAmount(currentOrder);
-  }, [currentOrder, includeTip18]);
+    return computeTipAmount(currentOrder, tipPercent);
+  }, [currentOrder, includeTip18, tipPercent]);
 
   const grandTotal = useMemo(() => {
     if (!currentOrder) return 0;
-    return grandTotalWithTip(currentOrder, includeTip18);
-  }, [currentOrder, includeTip18]);
+    return grandTotalWithTip(currentOrder, includeTip18, tipPercent);
+  }, [currentOrder, includeTip18, tipPercent]);
 
   const handleProduct = async (p: Product) => {
     if (!activeCategory) return;
@@ -201,7 +203,7 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
       ...currentOrder,
       items: (currentOrder.items ?? []).map((it) => ({ ...it })),
     };
-    const withTip = useOrderStore.getState().includeTip18;
+    const { includeTip18: withTip, tipPercent: pctTip } = useOrderStore.getState();
     try {
       await payOrder(method);
       toast.success('¡Pago registrado!');
@@ -213,6 +215,7 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
         try {
           const payload = buildReceiptPayload(snapshot, method, settings, 'final', {
             include: withTip,
+            percent: pctTip,
           });
           const result = await printApi({
             config: toElectronPrintConfig(settings) as Record<string, unknown>,
@@ -260,8 +263,8 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
     }
     setActionBusy(true);
     try {
-      const withTip = useOrderStore.getState().includeTip18;
-      const payload = buildPreBillPayload(currentOrder, settings, withTip);
+      const { includeTip18: withTip, tipPercent: pctTip } = useOrderStore.getState();
+      const payload = buildPreBillPayload(currentOrder, settings, withTip, pctTip);
       const result = await printApi({
         config: toElectronPrintConfig(settings) as Record<string, unknown>,
         payload: { ...payload } as Record<string, unknown>,
@@ -360,6 +363,8 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
             onPrintPreBill={handlePrintPreBill}
             includeTip18={includeTip18}
             onToggleTip18={setIncludeTip18}
+            tipPercent={tipPercent}
+            onTipPercentChange={setTipPercent}
             tipAmount={tipAmount}
             grandTotal={grandTotal}
             onSaveNote={handleSaveNote}

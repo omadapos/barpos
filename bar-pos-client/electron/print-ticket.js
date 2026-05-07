@@ -243,10 +243,12 @@ async function printThermalReceipt(config, payload) {
     Number(payload.grandTotal) || baseTot + tipAmt;
   const hasTip = tipAmt > 0;
   const includesTip = payload.includesTip === true;
+  const tipPctShown = Number(payload.tipPercent);
+  const tipPctLabel = Number.isFinite(tipPctShown) && tipPctShown > 0 ? tipPctShown : 18;
 
   if (hasTip) {
     printer.leftRight('Total', money(baseTot));
-    printer.leftRight(`Propina (${payload.tipPercent || 18}%)`, money(tipAmt));
+    printer.leftRight(`Propina (${tipPctLabel}%)`, money(tipAmt));
     printer.bold(true);
     printer.leftRight(isPrebill ? 'A PAGAR' : 'TOTAL A PAGAR', money(grand));
     printer.bold(false);
@@ -259,7 +261,7 @@ async function printThermalReceipt(config, payload) {
   printer.newLine();
   printer.alignCenter();
   if (includesTip && hasTip) {
-    printer.println('*** INCLUYE PROPINA 18% ***');
+    printer.println(`*** INCLUYE PROPINA ${tipPctLabel}% ***`);
   } else {
     printer.println('*** SIN PROPINA ***');
   }
