@@ -1,6 +1,21 @@
 import { api } from './client';
 import type { ApiResponse } from './types.api';
-import type { Order } from '../types';
+import type { Order, StationPrintJob } from '../types';
+
+export type SendOrderResult = {
+  order: Order;
+  printJobs: StationPrintJob[];
+};
+
+function normalizeSendOrderPayload(data: Order | SendOrderResult): SendOrderResult {
+  if (data && typeof data === 'object' && 'order' in data) {
+    return {
+      order: data.order,
+      printJobs: Array.isArray(data.printJobs) ? data.printJobs : [],
+    };
+  }
+  return { order: data as Order, printJobs: [] };
+}
 
 export const ordersApi = {
   getOpen: () =>
@@ -45,7 +60,9 @@ export const ordersApi = {
     api.delete<ApiResponse<unknown>>(`/api/orders/${orderId}`).then((r) => r.data.data),
 
   send: (orderId: number) =>
-    api.post<ApiResponse<Order>>(`/api/orders/${orderId}/send`).then((r) => r.data.data),
+    api
+      .post<ApiResponse<Order | SendOrderResult>>(`/api/orders/${orderId}/send`)
+      .then((r) => normalizeSendOrderPayload(r.data.data)),
 
   moveItems: (
     orderId: number,

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { BottleMeasure, Category, Order, Product } from '@/types';
+import type { BottleMeasure, Category, Order, Product, StationPrintJob } from '@/types';
 import { ordersApi } from '@/api/orders.api';
 
 interface OrderStore {
@@ -25,7 +25,7 @@ interface OrderStore {
   removeItem: (itemId: number) => Promise<void>;
   payOrder: (method: 'cash' | 'card') => Promise<void>;
   cancelOrder: () => Promise<void>;
-  sendOrder: () => Promise<void>;
+  sendOrder: () => Promise<{ order: Order; printJobs: StationPrintJob[] } | null>;
   refreshOrder: () => Promise<void>;
   updateNotes: (notes: string) => Promise<void>;
   moveItems: (
@@ -125,9 +125,10 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
 
   sendOrder: async () => {
     const { currentOrder } = get();
-    if (!currentOrder) return;
-    const updated = await ordersApi.send(currentOrder.id);
-    set({ currentOrder: updated });
+    if (!currentOrder) return null;
+    const result = await ordersApi.send(currentOrder.id);
+    set({ currentOrder: result.order });
+    return result;
   },
 
   refreshOrder: async () => {

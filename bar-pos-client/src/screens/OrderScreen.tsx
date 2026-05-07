@@ -15,7 +15,13 @@ import { useOrderStore } from '@/store/useOrderStore';
 import { useTableStore } from '@/store/useTableStore';
 import type { BottleMeasure, Order, OrderItem, Product } from '@/types';
 import { buildPreBillPayload, buildReceiptPayload } from '@/lib/buildReceiptPayload';
-import { loadThermalSettings, toElectronPrintConfig } from '@/lib/thermalPrinterConfig';
+import { buildStationPrintPayload } from '@/lib/buildStationPrintPayload';
+import {
+  loadThermalSettings,
+  toElectronPrintConfig,
+  toStationElectronPrintConfig,
+  type PrintStationKey,
+} from '@/lib/thermalPrinterConfig';
 import {
   computeTipAmount,
   grandTotalWithTip,
@@ -206,6 +212,11 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
 
   const confirmCancel = async () => {
     if (!currentOrder) return;
+    const hasSentItems = currentOrder.items?.some((it) => (it.status ?? 'pending') !== 'pending');
+    if (hasSentItems) {
+      toast.error('La orden tiene productos enviados y requiere aprobacion para cancelarse');
+      return;
+    }
     setActionBusy(true);
     try {
       await cancelOrder();
@@ -303,9 +314,46 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
     }
     setActionBusy(true);
     try {
-      await sendOrder();
+      const result = await sendOrder();
+      if (!result) return;
+
+      const settings = loadThermalSettings();
+      const printApi = window.electronEnv?.printThermalReceipt;
+      const printJobs = result.printJobs ?? [];
+      const printableJobs = printJobs.filter((job) => job.items?.length);
+      const failures: string[] = [];
+
+      if (printableJobs.length > 0) {
+        if (!printApi) {
+          failures.push('impresion de comandas solo disponible en escritorio');
+        } else {
+          for (const job of printableJobs) {
+            if (job.station !== 'bar' && job.station !== 'kitchen') continue;
+            const station = job.station as PrintStationKey;
+            const stationConfig = settings.stationPrinters[station];
+            if (!stationConfig.enabled) {
+              failures.push(`${job.stationName || station} sin impresora configurada`);
+              continue;
+            }
+
+            const payload = buildStationPrintPayload(result.order, job);
+            const printResult = await printApi({
+              config: toStationElectronPrintConfig(settings, station) as Record<string, unknown>,
+              payload: { ...payload } as Record<string, unknown>,
+            });
+            if (!printResult.ok) {
+              failures.push(`${job.stationName || station}: ${printResult.error || 'error al imprimir'}`);
+            }
+          }
+        }
+      }
+
       await refresh();
-      toast.success('Pedido enviado');
+      if (failures.length) {
+        toast.error(`Pedido enviado, pero ${failures[0]}`);
+      } else {
+        toast.success(printableJobs.length ? 'Pedido enviado e impreso' : 'Pedido enviado');
+      }
       onBack();
     } finally {
       setActionBusy(false);

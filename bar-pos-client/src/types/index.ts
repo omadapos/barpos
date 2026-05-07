@@ -12,6 +12,7 @@ export interface Category {
   icon: string;
   sortOrder: number;
   isBottleCategory: boolean;
+  printStation?: 'bar' | 'kitchen' | 'none' | string | null;
   /** Si viene del API; por defecto visible */
   active?: boolean;
 }
@@ -69,6 +70,20 @@ export interface Order {
   notes?: string | null;
   createdAt: string;
   items?: OrderItem[];
+}
+
+export interface StationPrintJobItem {
+  orderItemId: number;
+  productName: string;
+  quantity: number;
+  measureName?: string | null;
+  notes?: string | null;
+}
+
+export interface StationPrintJob {
+  station: 'bar' | 'kitchen' | string;
+  stationName?: string | null;
+  items: StationPrintJobItem[];
 }
 
 export interface ReportSummary {

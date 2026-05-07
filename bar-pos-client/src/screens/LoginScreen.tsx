@@ -169,7 +169,7 @@ export function LoginScreen() {
 
       <div className="mt-8 flex flex-col items-center gap-1 opacity-60">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-white">
-          v2.1.0 Premium
+          v1.0.0
         </p>
         <p className="text-[9px] font-bold text-white/50 font-mono">
           ID: {currentAppKey ? `${currentAppKey.slice(0, 12)}...` : 'sin configurar'}

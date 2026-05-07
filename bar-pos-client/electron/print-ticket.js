@@ -314,6 +314,80 @@ async function printThermalReceipt(config, payload) {
   await printer.execute();
 }
 
+/**
+ * Comanda por estacion (barra/cocina). No imprime totales ni abre cajon.
+ * @param {object} config - connection, tcpHost, tcpPort, comPort, driver, width
+ * @param {object} payload - documentKind: 'station', stationName, tableName, orderId, items
+ */
+async function printThermalStationOrder(config, payload) {
+  const printer = createPrinter(config);
+  const lineW = Math.min(56, Math.max(32, Number(config.width) || 48));
+  const driverName = String(config.driver || 'EPSON').toUpperCase();
+  const stationName = String(payload.stationName || payload.station || 'COMANDA').trim();
+
+  printer.setTypeFontA();
+  printer.alignCenter();
+  printer.bold(true);
+  printer.setTextDoubleHeight();
+  printlnWrapped(printer, stationName.toUpperCase(), lineW);
+  printer.setTextNormal();
+  printer.bold(false);
+  printer.println('COMANDA');
+  printer.drawLine();
+
+  boostBodyFontSize(printer, driverName);
+  printer.alignLeft();
+  printer.bold(true);
+  printer.println(`Mesa: ${payload.tableName || '-'}`);
+  printer.bold(false);
+  printer.println(`Orden #${payload.orderId || '-'}`);
+  if (payload.createdAt) {
+    printer.println(`Hora: ${payload.createdAt}`);
+  }
+  printer.drawLine();
+
+  const items = Array.isArray(payload.items) ? payload.items : [];
+  for (const it of items) {
+    const qty = Number(it.qty || it.quantity || 1);
+    const name = String(it.name || it.productName || '').trim();
+    printer.bold(true);
+    printlnWrapped(printer, `${qty} x ${name}`, lineW);
+    printer.bold(false);
+    if (it.measure) {
+      printlnWrapped(printer, `   ${String(it.measure)}`, lineW);
+    }
+    if (it.notes) {
+      printlnWrapped(printer, `   Nota: ${String(it.notes)}`, lineW);
+    }
+    printer.newLine();
+  }
+
+  if (items.length === 0) {
+    printer.println('Sin items para imprimir');
+  }
+
+  printer.drawLine();
+  printer.alignCenter();
+  printer.println('*** PRODUCCION ***');
+  printer.newLine();
+  printer.newLine();
+
+  printer.setTextNormal();
+  printer.bold(false);
+
+  try {
+    printer.partialCut();
+  } catch {
+    try {
+      printer.cut();
+    } catch {
+      /* sin cortador */
+    }
+  }
+
+  await printer.execute();
+}
+
 const MAX_REPORT_CATEGORIES = 18;
 const MAX_REPORT_PRODUCTS = 22;
 const MAX_REPORT_TABLES = 16;
@@ -460,6 +534,7 @@ async function printThermalReport(config, payload) {
 
 module.exports = {
   printThermalReceipt,
+  printThermalStationOrder,
   printThermalReport,
   resolveInterface,
   formatThermalPrintError,

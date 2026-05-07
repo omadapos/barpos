@@ -4,6 +4,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const {
   printThermalReceipt,
+  printThermalStationOrder,
   printThermalReport,
   formatThermalPrintError,
 } = require('./print-ticket');
@@ -61,6 +62,8 @@ ipcMain.handle('thermal-print', async (_evt, data) => {
     const payload = JSON.parse(JSON.stringify(payIn));
     if (payload.documentKind === 'report') {
       await printThermalReport(config, payload);
+    } else if (payload.documentKind === 'station') {
+      await printThermalStationOrder(config, payload);
     } else {
       await printThermalReceipt(config, payload);
     }

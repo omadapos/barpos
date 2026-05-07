@@ -9,9 +9,13 @@ import {
   loadThermalSettings,
   saveThermalSettings,
   toElectronPrintConfig,
+  toStationElectronPrintConfig,
+  type PrintStationKey,
+  type StationPrinterSettings,
   type ThermalConnection,
   type ThermalPrinterSettings,
 } from '@/lib/thermalPrinterConfig';
+import { buildStationPrintPayload } from '@/lib/buildStationPrintPayload';
 import { buildReceiptPayload } from '@/lib/buildReceiptPayload';
 import type { Order } from '@/types';
 
@@ -90,6 +94,22 @@ export default function PrinterSettingsModal({ open, onClose }: Props) {
 
   const persist = () => saveThermalSettings(s);
 
+  const updateStation = (
+    station: PrintStationKey,
+    patch: Partial<StationPrinterSettings>
+  ) => {
+    setS((p) => ({
+      ...p,
+      stationPrinters: {
+        ...p.stationPrinters,
+        [station]: {
+          ...p.stationPrinters[station],
+          ...patch,
+        },
+      },
+    }));
+  };
+
   const handleTest = async () => {
     const api = window.electronEnv?.printThermalReceipt;
     if (!api) {
@@ -115,10 +135,152 @@ export default function PrinterSettingsModal({ open, onClose }: Props) {
     }
   };
 
+  const handleStationTest = async (station: PrintStationKey) => {
+    const api = window.electronEnv?.printThermalReceipt;
+    if (!api) {
+      toast.error('Solo disponible en la app de escritorio.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const saved = saveThermalSettings(s);
+      const payload = buildStationPrintPayload(fakeTestOrder(), {
+        station,
+        stationName: station === 'kitchen' ? 'Cocina' : 'Barra',
+        items: [
+          {
+            orderItemId: 0,
+            productName: station === 'kitchen' ? 'Plato de prueba' : 'Bebida de prueba',
+            quantity: 1,
+            measureName: null,
+            notes: 'Prueba de comanda',
+          },
+        ],
+      });
+      const result = await api({
+        config: toStationElectronPrintConfig(saved, station) as Record<string, unknown>,
+        payload: { ...payload } as Record<string, unknown>,
+      });
+      if (result.ok) toast.success(`Comanda enviada a ${station === 'kitchen' ? 'cocina' : 'barra'}`);
+      else toast.error(result.error || 'Error al imprimir comanda');
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Error al imprimir comanda');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const reset = () => {
     setS({ ...defaultThermalSettings });
     saveThermalSettings(defaultThermalSettings);
     toast.success('Valores por defecto');
+  };
+
+  const renderStationSettings = (station: PrintStationKey) => {
+    const cfg = s.stationPrinters[station];
+    const label = station === 'kitchen' ? 'Cocina' : 'Barra';
+    return (
+      <div
+        key={station}
+        className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg)] p-3"
+      >
+        <label className="mb-3 flex cursor-pointer items-center justify-between gap-2 text-sm font-semibold text-[var(--text)]">
+          <span>{label}</span>
+          <span className="flex items-center gap-2 text-xs font-normal text-[var(--text3)]">
+            Activar
+            <input
+              type="checkbox"
+              checked={cfg.enabled}
+              onChange={(e) => updateStation(station, { enabled: e.target.checked })}
+              className="accent-[var(--green2)]"
+            />
+          </span>
+        </label>
+
+        <div className="mb-3 flex gap-3 text-xs">
+          <label className="flex items-center gap-2 text-[var(--text)]">
+            <input
+              type="radio"
+              name={`${station}-conn`}
+              checked={cfg.connection === 'tcp'}
+              onChange={() => updateStation(station, { connection: 'tcp' })}
+            />
+            Red
+          </label>
+          <label className="flex items-center gap-2 text-[var(--text)]">
+            <input
+              type="radio"
+              name={`${station}-conn`}
+              checked={cfg.connection === 'com'}
+              onChange={() => updateStation(station, { connection: 'com' })}
+            />
+            USB
+          </label>
+        </div>
+
+        {cfg.connection === 'tcp' ? (
+          <div className="mb-3 grid grid-cols-[1fr_84px] gap-2">
+            <input
+              className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 text-sm text-[var(--text)]"
+              value={cfg.tcpHost}
+              onChange={(e) => updateStation(station, { tcpHost: e.target.value })}
+              placeholder="192.168.0.101"
+            />
+            <input
+              type="number"
+              className="w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg2)] px-2 py-2 text-sm text-[var(--text)]"
+              value={cfg.tcpPort}
+              onChange={(e) => updateStation(station, { tcpPort: Number(e.target.value) || 9100 })}
+              min={1}
+              max={65535}
+            />
+          </div>
+        ) : (
+          <input
+            className="mb-3 w-full rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg2)] px-3 py-2 font-mono text-sm text-[var(--text)]"
+            list="barpos-com-ports"
+            value={cfg.comPort}
+            onChange={(e) =>
+              updateStation(station, {
+                comPort: e.target.value.trim().toUpperCase().replace(/^\\\\\.\\/i, ''),
+              })
+            }
+            placeholder="COM4"
+            autoComplete="off"
+          />
+        )}
+
+        <div className="grid grid-cols-[1fr_92px_auto] gap-2">
+          <select
+            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg2)] px-2 py-2 text-xs text-[var(--text)]"
+            value={cfg.driver}
+            onChange={(e) =>
+              updateStation(station, { driver: e.target.value === 'STAR' ? 'STAR' : 'EPSON' })
+            }
+          >
+            <option value="EPSON">EPSON</option>
+            <option value="STAR">STAR</option>
+          </select>
+          <select
+            className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg2)] px-2 py-2 text-xs text-[var(--text)]"
+            value={cfg.width}
+            onChange={(e) => updateStation(station, { width: Number(e.target.value) as 42 | 48 | 56 })}
+          >
+            <option value={42}>42</option>
+            <option value={48}>48</option>
+            <option value={56}>56</option>
+          </select>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void handleStationTest(station)}
+            className="rounded-[var(--radius)] border border-[var(--border2)] px-3 py-2 text-xs font-semibold text-[var(--text2)] hover:border-[var(--green)] disabled:opacity-50"
+          >
+            Probar
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return createPortal(
@@ -308,6 +470,21 @@ export default function PrinterSettingsModal({ open, onClose }: Props) {
               <option value={48}>48 (80 mm típico)</option>
               <option value={56}>56</option>
             </select>
+          </div>
+        </div>
+
+        <div className="mb-3 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg2)] p-3">
+          <div className="mb-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-[var(--text2)]">
+              Comandas por estacion
+            </p>
+            <p className="mt-1 text-[10px] leading-relaxed text-[var(--text3)]">
+              Estas impresoras se usan al tocar Enviar pedido. No imprimen totales ni abren cajon.
+            </p>
+          </div>
+          <div className="space-y-3">
+            {renderStationSettings('bar')}
+            {renderStationSettings('kitchen')}
           </div>
         </div>
 

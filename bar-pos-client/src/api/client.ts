@@ -1,8 +1,8 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 import toast from 'react-hot-toast';
+import { getAppKey } from '@/config/tenant';
 import { getApiBaseURL } from '@/lib/apiBaseUrl';
 import { useAuthStore } from '@/store/useAuthStore';
-import { getAppKey } from '@/config/tenant';
 
 declare module 'axios' {
   export interface AxiosRequestConfig {
@@ -17,18 +17,17 @@ export const api = axios.create({
 
 api.interceptors.request.use((config) => {
   config.baseURL = getApiBaseURL();
-  const token = useAuthStore.getState().token;
-  
+
   const appKey = getAppKey();
   if (appKey) {
     config.headers['x-app-key'] = appKey;
-    // Log para depuración (puedes verlo en la consola de Electron/Chrome)
-    console.log(`[API] Request to ${config.url} with AppKey: ${appKey.slice(0, 8)}...`);
   }
 
+  const token = useAuthStore.getState().token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
@@ -39,20 +38,21 @@ api.interceptors.response.use(
     const url = cfg?.url ?? '';
     const isLoginPin = url.includes('/api/auth/login-pin');
     const status = err.response?.status;
-    const body = err.response?.data;
 
-    console.error('[API] Response error', {
-      baseURL: cfg?.baseURL,
-      url,
-      status,
-      body,
-      message: err.message,
-    });
+    if (import.meta.env.DEV) {
+      console.error('[API] Response error', {
+        baseURL: cfg?.baseURL,
+        url,
+        status,
+        body: err.response?.data,
+        message: err.message,
+      });
+    }
 
     if (status === 401) {
       useAuthStore.getState().clearAuth();
       if (!cfg?.skipErrorToast && !isLoginPin) {
-        toast.error('Sesión expirada o no autorizado');
+        toast.error('Sesion expirada o no autorizado');
       }
       return Promise.reject(err);
     }
@@ -64,9 +64,10 @@ api.interceptors.response.use(
           ? raw
           : raw != null
             ? JSON.stringify(raw)
-            : 'Error de conexión con el servidor';
+            : 'Error de conexion con el servidor';
       toast.error(msg);
     }
+
     return Promise.reject(err);
   }
 );
