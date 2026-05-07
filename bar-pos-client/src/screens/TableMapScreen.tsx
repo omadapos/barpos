@@ -43,12 +43,13 @@ export default function TableMapScreen({ walkInTick, onNavigateOrder }: Props) {
     []
   );
 
-  const openTable = async (table: Table, occupied: boolean) => {
+  const openTable = async (table: Table) => {
     setLoading(true);
     try {
       let order;
-      if (occupied) {
-        order = await ordersApi.getByTable(table.id);
+      const existing = meta(table.id);
+      if (existing) {
+        order = await hydrateOrder(existing);
       } else {
         const created = await ordersApi.create({ tableId: table.id, notes: table.name });
         order = await hydrateOrder(created);
@@ -124,8 +125,8 @@ export default function TableMapScreen({ walkInTick, onNavigateOrder }: Props) {
       <div className="min-h-0 flex-1 overflow-y-auto p-8 scrollbar-none scroll-smooth">
         <div className="mx-auto grid max-w-7xl grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-6">
           {activeTables.map((t) => {
-            const occ = !!openOrders[t.id];
             const m = meta(t.id);
+            const occ = (m?.itemCount ?? 0) > 0;
             return (
               <TableCard
                 key={t.id}
@@ -134,7 +135,7 @@ export default function TableMapScreen({ walkInTick, onNavigateOrder }: Props) {
                 itemCount={m?.itemCount}
                 total={m?.total}
                 createdAt={m?.createdAt}
-                onOpen={() => openTable(t, occ)}
+                onOpen={() => openTable(t)}
                 onViewOrder={() => viewOrder(t)}
               />
             );

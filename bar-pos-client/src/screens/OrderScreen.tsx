@@ -141,6 +141,15 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
     if (!currentOrder) return 0;
     return grandTotalWithTip(currentOrder, includeTip18, tipPercent);
   }, [currentOrder, includeTip18, tipPercent]);
+  const occupiedOrderTableIds = useMemo(
+    () =>
+      new Set(
+        Object.entries(openOrders)
+          .filter(([, order]) => (order.itemCount ?? 0) > 0)
+          .map(([tableId]) => Number(tableId))
+      ),
+    [openOrders]
+  );
 
   const handleProduct = async (p: Product) => {
     if (!activeCategory) return;
@@ -406,7 +415,7 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
             busy={actionBusy}
             tables={tables.filter((t) => t.active)}
             currentTableId={currentOrder.tableId}
-            openOrderTableIds={new Set(Object.keys(openOrders).map(Number))}
+            openOrderTableIds={occupiedOrderTableIds}
             onMoveItems={handleMoveItems}
             onMerge={handleMerge}
           />
