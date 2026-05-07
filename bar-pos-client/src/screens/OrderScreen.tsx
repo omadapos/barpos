@@ -331,14 +331,14 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
             if (job.station !== 'bar' && job.station !== 'kitchen') continue;
             const station = job.station as PrintStationKey;
             const stationConfig = settings.stationPrinters[station];
-            if (!stationConfig.enabled) {
-              failures.push(`${job.stationName || station} sin impresora configurada`);
-              continue;
-            }
 
             const payload = buildStationPrintPayload(result.order, job);
             const printResult = await printApi({
-              config: toStationElectronPrintConfig(settings, station) as Record<string, unknown>,
+              config: (
+                stationConfig.enabled
+                  ? toStationElectronPrintConfig(settings, station)
+                  : toElectronPrintConfig(settings)
+              ) as Record<string, unknown>,
               payload: { ...payload } as Record<string, unknown>,
             });
             if (!printResult.ok) {

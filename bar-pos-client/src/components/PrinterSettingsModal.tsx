@@ -479,7 +479,8 @@ export default function PrinterSettingsModal({ open, onClose }: Props) {
               Comandas por estacion
             </p>
             <p className="mt-1 text-[10px] leading-relaxed text-[var(--text3)]">
-              Estas impresoras se usan al tocar Enviar pedido. No imprimen totales ni abren cajon.
+              Estas impresoras se usan al tocar Enviar pedido. Si una estacion no esta activa,
+              usa la impresora principal. No imprimen totales ni abren cajon.
             </p>
           </div>
           <div className="space-y-3">
