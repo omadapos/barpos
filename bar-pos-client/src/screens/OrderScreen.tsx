@@ -65,6 +65,8 @@ function OrderProductsPanel({
 export default function OrderScreen({ onBack, onPaid }: Props) {
   const queryClient = useQueryClient();
   const refresh = useTableStore((s) => s.refresh);
+  const tables = useTableStore((s) => s.tables);
+  const openOrders = useTableStore((s) => s.openOrders);
   const currentOrder = useOrderStore((s) => s.currentOrder);
   const activeCategory = useOrderStore((s) => s.activeCategory);
   const setActiveCategory = useOrderStore((s) => s.setActiveCategory);
@@ -78,6 +80,8 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
   const removeItem = useOrderStore((s) => s.removeItem);
   const payOrder = useOrderStore((s) => s.payOrder);
   const cancelOrder = useOrderStore((s) => s.cancelOrder);
+  const moveItems = useOrderStore((s) => s.moveItems);
+  const mergeToTable = useOrderStore((s) => s.mergeToTable);
   const updateNotes = useOrderStore((s) => s.updateNotes);
   const includeTip18 = useOrderStore((s) => s.includeTip18);
   const setIncludeTip18 = useOrderStore((s) => s.setIncludeTip18);
@@ -246,6 +250,37 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
     }
   };
 
+  const handleMoveItems = async (
+    itemsToMove: Array<{ orderItemId: number; quantity: number }>,
+    targetTableId: number
+  ) => {
+    setActionBusy(true);
+    try {
+      const { sourceCleared } = await moveItems(itemsToMove, targetTableId);
+      await refresh();
+      if (sourceCleared) {
+        toast.success('Items movidos. Mesa liberada');
+        onBack();
+      } else {
+        toast.success('Items movidos');
+      }
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const handleMerge = async (targetTableId: number) => {
+    setActionBusy(true);
+    try {
+      await mergeToTable(targetTableId);
+      await refresh();
+      toast.success('Mesas unidas');
+      onBack();
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
   const handlePrintPreBill = async () => {
     if (!currentOrder?.items?.length) {
       toast.error('Agrega artículos para imprimir la pre-cuenta');
@@ -369,6 +404,11 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
             grandTotal={grandTotal}
             onSaveNote={handleSaveNote}
             busy={actionBusy}
+            tables={tables.filter((t) => t.active)}
+            currentTableId={currentOrder.tableId}
+            openOrderTableIds={new Set(Object.keys(openOrders).map(Number))}
+            onMoveItems={handleMoveItems}
+            onMerge={handleMerge}
           />
         </div>
       </div>

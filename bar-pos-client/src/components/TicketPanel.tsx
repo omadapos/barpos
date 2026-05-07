@@ -3,9 +3,10 @@ import type { TouchEvent } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Minus, Plus, X, ReceiptText, Clock } from 'lucide-react';
-import type { OrderItem } from '@/types';
+import type { OrderItem, Table } from '@/types';
 import { formatMoney } from '@/lib/format';
 import OrderNoteModal from '@/components/OrderNoteModal';
+import MoveTableModal from '@/components/MoveTableModal';
 
 function useElapsedLabel(createdAt: string) {
   const [label, setLabel] = useState('');
@@ -32,10 +33,16 @@ function LineRow({
   item,
   onQty,
   onRemove,
+  selectable,
+  selected,
+  onSelect,
 }: {
   item: OrderItem;
   onQty: (id: number, q: number) => void;
   onRemove: (id: number) => void;
+  selectable?: boolean;
+  selected?: boolean;
+  onSelect?: (id: number) => void;
 }) {
   const startX = useRef<number | null>(null);
   const [offset, setOffset] = useState(0);
@@ -56,7 +63,9 @@ function LineRow({
 
   return (
     <div
-      className="item-enter border-b border-[var(--border)] py-3 px-1 transition-all"
+      className={`item-enter border-b px-1 py-3 transition-all ${
+        selected ? 'border-[var(--green)] bg-[var(--green-dim)]' : 'border-[var(--border)]'
+      }`}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -65,11 +74,28 @@ function LineRow({
         className="flex items-center justify-between gap-3 transition-transform"
         style={{ transform: `translateX(${offset}px)` }}
       >
-        <div className="min-w-0 flex-1">
-          <div className="font-bold text-[var(--text)] text-sm">{item.productName}</div>
-          {item.measureName && (
-            <div className="text-[10px] font-semibold text-[var(--text3)] uppercase">{item.measureName}</div>
+        <div className="flex min-w-0 flex-1 items-start gap-2">
+          {selectable && (
+            <button
+              type="button"
+              onClick={() => onSelect?.(item.id)}
+              className={`app-no-drag mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition ${
+                selected
+                  ? 'border-[var(--green)] bg-[var(--green3)] text-white'
+                  : 'border-[var(--border2)] bg-white'
+              }`}
+            >
+              {selected && <span className="text-[10px] font-bold">✓</span>}
+            </button>
           )}
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-bold text-[var(--text)]">{item.productName}</div>
+            {item.measureName && (
+              <div className="text-[10px] font-semibold uppercase text-[var(--text3)]">
+                {item.measureName}
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="flex items-center gap-3">
@@ -78,6 +104,7 @@ function LineRow({
               type="button"
               className="h-7 w-7 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-90 transition-all"
               onClick={() => onQty(item.id, item.quantity - 1)}
+              disabled={selectable}
             >
               <Minus className="h-3 w-3" />
             </button>
@@ -88,6 +115,7 @@ function LineRow({
               type="button"
               className="h-7 w-7 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-90 transition-all"
               onClick={() => onQty(item.id, item.quantity + 1)}
+              disabled={selectable}
             >
               <Plus className="h-3 w-3" />
             </button>
@@ -124,6 +152,14 @@ type Props = {
   grandTotal?: number;
   onSaveNote: (note: string) => Promise<void>;
   busy?: boolean;
+  tables?: Table[];
+  currentTableId?: number | null;
+  openOrderTableIds?: Set<number>;
+  onMoveItems?: (
+    items: Array<{ orderItemId: number; quantity: number }>,
+    targetTableId: number
+  ) => Promise<void>;
+  onMerge?: (targetTableId: number) => Promise<void>;
 };
 
 export default function TicketPanel({
@@ -147,15 +183,54 @@ export default function TicketPanel({
   grandTotal,
   onSaveNote,
   busy,
+  tables = [],
+  currentTableId,
+  openOrderTableIds = new Set(),
+  onMoveItems,
+  onMerge,
 }: Props) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [moveModal, setMoveModal] = useState<'move' | 'merge' | null>(null);
   const elapsed = useElapsedLabel(createdAt);
   const started = format(new Date(createdAt), 'h:mm a', { locale: es });
   const tipPresets = [10, 12, 15, 18, 20, 22, 25];
   const tipOptions = tipPresets.includes(tipPercent)
     ? tipPresets
     : [...tipPresets, tipPercent].sort((a, b) => a - b);
+  const canMove = Boolean(onMoveItems || onMerge) && tables.length > 0;
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const handleTablePick = async (tableId: number) => {
+    const mode = moveModal;
+    setMoveModal(null);
+    if (mode === 'merge') {
+      await onMerge?.(tableId);
+      return;
+    }
+
+    const toMove = Array.from(selectedIds).map((orderItemId) => ({
+      orderItemId,
+      quantity: items.find((i) => i.id === orderItemId)?.quantity ?? 1,
+    }));
+    await onMoveItems?.(toMove, tableId);
+    exitSelectMode();
+  };
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
@@ -203,7 +278,15 @@ export default function TicketPanel({
           </div>
         ) : (
           items.map((it) => (
-            <LineRow key={it.id} item={it} onQty={onQuantity} onRemove={onRemove} />
+            <LineRow
+              key={it.id}
+              item={it}
+              onQty={onQuantity}
+              onRemove={onRemove}
+              selectable={selectMode}
+              selected={selectedIds.has(it.id)}
+              onSelect={toggleSelect}
+            />
           ))
         )}
       </div>
@@ -271,6 +354,54 @@ export default function TicketPanel({
           </div>
         </div>
 
+        {canMove && !selectMode && (
+          <div className="mb-3 flex gap-2">
+            {onMoveItems && (
+              <button
+                type="button"
+                disabled={!items.length || busy}
+                onClick={() => setSelectMode(true)}
+                className="app-no-drag min-h-[44px] flex-1 rounded-xl border border-[var(--border2)] text-sm font-bold text-[var(--text2)] transition hover:border-[var(--green)] hover:text-[var(--green)] disabled:opacity-40 active:scale-[0.98]"
+              >
+                ↗ Mover
+              </button>
+            )}
+            {onMerge && (
+              <button
+                type="button"
+                disabled={!items.length || busy}
+                onClick={() => setMoveModal('merge')}
+                className="app-no-drag min-h-[44px] flex-1 rounded-xl border border-[var(--border2)] text-sm font-bold text-[var(--text2)] transition hover:border-[var(--green)] hover:text-[var(--green)] disabled:opacity-40 active:scale-[0.98]"
+              >
+                ⊕ Unir Mesa
+              </button>
+            )}
+          </div>
+        )}
+
+        {selectMode && (
+          <div className="mb-3 flex gap-2">
+            <button
+              type="button"
+              onClick={exitSelectMode}
+              className="app-no-drag min-h-[44px] flex-1 rounded-xl border border-[var(--border2)] text-sm font-bold text-[var(--text3)] transition hover:text-[var(--text2)] active:scale-[0.98]"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              disabled={selectedIds.size === 0 || busy}
+              onClick={() => setMoveModal('move')}
+              className="app-no-drag min-h-[44px] flex-[2] rounded-xl bg-[var(--green3)] text-sm font-black text-white transition hover:bg-[var(--green2)] disabled:opacity-40 active:scale-[0.98]"
+            >
+              Mover{' '}
+              {selectedIds.size > 0
+                ? `${selectedIds.size} item${selectedIds.size !== 1 ? 's' : ''}`
+                : ''}
+            </button>
+          </div>
+        )}
+
         <div className="grid grid-cols-5 gap-2">
           <button
             type="button"
@@ -307,6 +438,16 @@ export default function TicketPanel({
         initial={notes ?? ''}
         onClose={() => setNoteOpen(false)}
         onSave={onSaveNote}
+      />
+
+      <MoveTableModal
+        open={moveModal !== null}
+        mode={moveModal ?? 'move'}
+        selectedCount={selectedIds.size}
+        tables={tables.filter((t) => t.id !== currentTableId)}
+        openOrderTableIds={openOrderTableIds}
+        onSelect={(tableId) => void handleTablePick(tableId)}
+        onClose={() => setMoveModal(null)}
       />
 
       {cancelOpen && (

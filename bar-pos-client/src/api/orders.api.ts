@@ -44,7 +44,22 @@ export const ordersApi = {
   cancel: (orderId: number) =>
     api.delete<ApiResponse<unknown>>(`/api/orders/${orderId}`).then((r) => r.data.data),
 
-  /** PATCH notas; si el backend no expone la ruta, fallará con 404. */
+  moveItems: (
+    orderId: number,
+    body: { targetTableId: number; items: Array<{ orderItemId: number; quantity: number }> }
+  ) =>
+    api
+      .post<ApiResponse<{ sourceOrder: Order | null; targetOrder: Order }>>(
+        `/api/orders/${orderId}/move-items`,
+        body
+      )
+      .then((r) => r.data.data),
+
+  merge: (orderId: number, body: { targetTableId: number }) =>
+    api
+      .post<ApiResponse<{ targetOrder: Order }>>(`/api/orders/${orderId}/merge`, body)
+      .then((r) => r.data.data),
+
   updateNotes: (orderId: number, notes: string) =>
     api
       .patch<ApiResponse<Order>>(`/api/orders/${orderId}`, { notes }, { skipErrorToast: true })

@@ -53,9 +53,9 @@ export default function TableCard({
 
   const getStatusClasses = () => {
     if (occupied) {
-      return 'border-[var(--green)] bg-[var(--green-pale)] shadow-sm';
+      return 'border-[var(--red)] bg-[var(--red-pale)] shadow-sm';
     }
-    return 'border-[var(--border)] bg-white hover:border-[var(--green2)] hover:shadow-md';
+    return 'border-[var(--green)] bg-[var(--green-pale)] hover:border-[var(--green2)] hover:shadow-md';
   };
 
   return (
@@ -75,7 +75,7 @@ export default function TableCard({
       >
         <div className="flex items-start justify-between">
           <span className="text-xl font-black tracking-tight text-[var(--text)]">{table.name}</span>
-          <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${occupied ? 'bg-[var(--green)] text-white' : 'bg-[var(--bg3)] text-[var(--text3)]'}`}>
+          <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${occupied ? 'bg-[var(--red)] text-white' : 'bg-[var(--green)] text-white'}`}>
             <Users className="h-3 w-3" />
             {table.capacity}
           </div>
@@ -85,17 +85,17 @@ export default function TableCard({
           {occupied ? (
             <>
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[var(--green)] uppercase tracking-wider">Ocupada</span>
+                <span className="text-xs font-bold text-[var(--red)] uppercase tracking-wider">Ocupada</span>
                 <span className="text-[10px] font-medium text-[var(--text3)]">{formatElapsed(createdAt)}</span>
               </div>
-              <div className="text-xl font-black text-[var(--green)]">
+              <div className="text-xl font-black text-[var(--red)]">
                 {formatMoney(total ?? 0)}
               </div>
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-[var(--border2)]" />
-              <span className="text-xs font-bold text-[var(--text3)] uppercase tracking-wider">Libre</span>
+              <div className="h-2 w-2 rounded-full bg-[var(--green)]" />
+              <span className="text-xs font-bold text-[var(--green)] uppercase tracking-wider">Libre</span>
             </div>
           )}
         </div>

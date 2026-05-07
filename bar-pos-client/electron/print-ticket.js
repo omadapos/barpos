@@ -303,7 +303,7 @@ async function printThermalReceipt(config, payload) {
     }
   }
 
-  if (payload.paymentMethod === 'cash') {
+  if (!isPrebill && payload.paymentMethod === 'cash') {
     try {
       printer.openCashDrawer();
     } catch {

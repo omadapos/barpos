@@ -27,6 +27,11 @@ interface OrderStore {
   cancelOrder: () => Promise<void>;
   refreshOrder: () => Promise<void>;
   updateNotes: (notes: string) => Promise<void>;
+  moveItems: (
+    items: Array<{ orderItemId: number; quantity: number }>,
+    targetTableId: number
+  ) => Promise<{ sourceCleared: boolean }>;
+  mergeToTable: (targetTableId: number) => Promise<void>;
 }
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
@@ -129,5 +134,38 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     if (!currentOrder) return;
     await ordersApi.updateNotes(currentOrder.id, notes);
     await get().refreshOrder();
+  },
+
+  moveItems: async (items, targetTableId) => {
+    const { currentOrder } = get();
+    if (!currentOrder) return { sourceCleared: false };
+    const result = await ordersApi.moveItems(currentOrder.id, { targetTableId, items });
+    if (result.sourceOrder) {
+      set({ currentOrder: result.sourceOrder });
+      return { sourceCleared: false };
+    }
+    set({
+      currentOrder: null,
+      activeCategory: null,
+      selectedProduct: null,
+      showMeasureModal: false,
+      includeTip18: false,
+      tipPercent: 18,
+    });
+    return { sourceCleared: true };
+  },
+
+  mergeToTable: async (targetTableId) => {
+    const { currentOrder } = get();
+    if (!currentOrder) return;
+    await ordersApi.merge(currentOrder.id, { targetTableId });
+    set({
+      currentOrder: null,
+      activeCategory: null,
+      selectedProduct: null,
+      showMeasureModal: false,
+      includeTip18: false,
+      tipPercent: 18,
+    });
   },
 }));
