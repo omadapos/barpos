@@ -36,7 +36,7 @@ export const useTableStore = create<TableStore>((set) => ({
       number,
       Pick<Order, 'id' | 'total' | 'itemCount'> & { createdAt?: string }
     > = {};
-    orders.forEach((o) => {
+    orders.filter((o) => o.status === 'open').forEach((o) => {
       if (o.tableId != null) {
         map[o.tableId] = {
           id: o.id,
@@ -58,7 +58,7 @@ export const useTableStore = create<TableStore>((set) => ({
       number,
       Pick<Order, 'id' | 'total' | 'itemCount'> & { createdAt?: string }
     > = {};
-    orders.forEach((o) => {
+    orders.filter((o) => o.status === 'open').forEach((o) => {
       if (o.tableId != null) {
         map[o.tableId] = {
           id: o.id,

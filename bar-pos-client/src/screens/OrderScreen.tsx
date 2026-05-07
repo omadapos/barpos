@@ -11,6 +11,7 @@ import ApprovalWaitingModal from '@/components/ApprovalWaitingModal';
 import { approvalsApi, type ApprovalStatus } from '@/api/approvals.api';
 import { categoriesApi } from '@/api/categories.api';
 import { productsApi } from '@/api/products.api';
+import { tablesApi } from '@/api/tables.api';
 import { useOrderStore } from '@/store/useOrderStore';
 import { useTableStore } from '@/store/useTableStore';
 import type { BottleMeasure, Order, OrderItem, Product } from '@/types';
@@ -256,6 +257,14 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
           }
         } catch (e) {
           toast.error(e instanceof Error ? e.message : 'Error al imprimir');
+        }
+      }
+
+      if (snapshot.tableId != null) {
+        try {
+          await tablesApi.toggle(snapshot.tableId);
+        } catch {
+          toast.error('Pago registrado, pero no se pudo ocultar la mesa');
         }
       }
 
