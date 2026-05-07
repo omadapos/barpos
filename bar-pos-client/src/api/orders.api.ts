@@ -44,6 +44,9 @@ export const ordersApi = {
   cancel: (orderId: number) =>
     api.delete<ApiResponse<unknown>>(`/api/orders/${orderId}`).then((r) => r.data.data),
 
+  send: (orderId: number) =>
+    api.post<ApiResponse<Order>>(`/api/orders/${orderId}/send`).then((r) => r.data.data),
+
   moveItems: (
     orderId: number,
     body: { targetTableId: number; items: Array<{ orderItemId: number; quantity: number }> }

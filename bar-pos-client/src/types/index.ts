@@ -43,6 +43,16 @@ export interface OrderItem {
   unitPrice: number;
   quantity: number;
   subtotal: number;
+  status?: 'pending' | 'sent' | 'voided';
+  sentAt?: string | null;
+  sentBy?: string | null;
+  voidedAt?: string | null;
+  voidedBy?: string | null;
+  voidReason?: string | null;
+  compType?: 'customer_comp' | 'owner_comp' | 'staff_comp' | 'service_recovery' | 'promotion' | null;
+  compedAt?: string | null;
+  compedBy?: string | null;
+  approvalRequestId?: number | null;
 }
 
 export interface Order {

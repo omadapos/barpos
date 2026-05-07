@@ -7,11 +7,13 @@ import MeasureModal from '@/components/MeasureModal';
 import TicketPanel from '@/components/TicketPanel';
 import PaymentModal from '@/components/PaymentModal';
 import Spinner from '@/components/Spinner';
+import ApprovalWaitingModal from '@/components/ApprovalWaitingModal';
+import { approvalsApi, type ApprovalStatus } from '@/api/approvals.api';
 import { categoriesApi } from '@/api/categories.api';
 import { productsApi } from '@/api/products.api';
 import { useOrderStore } from '@/store/useOrderStore';
 import { useTableStore } from '@/store/useTableStore';
-import type { BottleMeasure, Order, Product } from '@/types';
+import type { BottleMeasure, Order, OrderItem, Product } from '@/types';
 import { buildPreBillPayload, buildReceiptPayload } from '@/lib/buildReceiptPayload';
 import { loadThermalSettings, toElectronPrintConfig } from '@/lib/thermalPrinterConfig';
 import {
@@ -80,6 +82,7 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
   const removeItem = useOrderStore((s) => s.removeItem);
   const payOrder = useOrderStore((s) => s.payOrder);
   const cancelOrder = useOrderStore((s) => s.cancelOrder);
+  const sendOrder = useOrderStore((s) => s.sendOrder);
   const moveItems = useOrderStore((s) => s.moveItems);
   const mergeToTable = useOrderStore((s) => s.mergeToTable);
   const updateNotes = useOrderStore((s) => s.updateNotes);
@@ -90,6 +93,9 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
 
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
+  const [approvalOpen, setApprovalOpen] = useState(false);
+  const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus | 'idle'>('idle');
+  const [approvalError, setApprovalError] = useState('');
 
   const { data: categoriesRaw = [], isLoading: catLoading } = useQuery({
     queryKey: ['categories'],
@@ -290,6 +296,74 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
     }
   };
 
+  const handleSendOrder = async () => {
+    if (!currentOrder?.items?.some((it) => (it.status ?? 'pending') === 'pending')) {
+      toast.error('No hay productos nuevos para enviar');
+      return;
+    }
+    setActionBusy(true);
+    try {
+      await sendOrder();
+      await refresh();
+      toast.success('Pedido enviado');
+      onBack();
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const handleRequestVoid = async (item: OrderItem) => {
+    if (!currentOrder) return;
+    setActionBusy(true);
+    setApprovalOpen(true);
+    setApprovalStatus('pending');
+    setApprovalError('');
+    try {
+      const request = await approvalsApi.create({
+        actionType: 'void_item',
+        orderId: currentOrder.id,
+        orderItemId: item.id,
+        quantity: item.quantity,
+        reason: `Anular ${item.productName}`,
+        payload: {
+          productName: item.productName,
+          quantity: item.quantity,
+        },
+      });
+
+      let finalStatus: ApprovalStatus = request.status;
+      for (let i = 0; i < 120 && finalStatus === 'pending'; i += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 3000));
+        const latest = await approvalsApi.getById(request.id);
+        finalStatus = latest.status;
+        setApprovalStatus(finalStatus);
+        if (latest.error) setApprovalError(latest.error);
+      }
+
+      if (finalStatus === 'approved') {
+        await useOrderStore.getState().refreshOrder();
+        await refresh();
+        toast.success('Anulacion aprobada');
+      } else if (finalStatus === 'pending') {
+        setApprovalStatus('expired');
+        setApprovalError('La aprobacion tardo demasiado');
+      } else {
+        setApprovalError(
+          finalStatus === 'rejected'
+            ? 'Solicitud rechazada por el jefe'
+            : approvalError || 'La solicitud no fue aprobada'
+        );
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'No se pudo solicitar aprobacion';
+      setApprovalStatus('failed');
+      setApprovalError(message);
+      toast.error(message);
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
   const handlePrintPreBill = async () => {
     if (!currentOrder?.items?.length) {
       toast.error('Agrega artículos para imprimir la pre-cuenta');
@@ -404,6 +478,7 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
               }
               setPaymentOpen(true);
             }}
+            onSendOrder={handleSendOrder}
             onPrintPreBill={handlePrintPreBill}
             includeTip18={includeTip18}
             onToggleTip18={setIncludeTip18}
@@ -418,6 +493,7 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
             openOrderTableIds={occupiedOrderTableIds}
             onMoveItems={handleMoveItems}
             onMerge={handleMerge}
+            onRequestVoid={handleRequestVoid}
           />
         </div>
       </div>
@@ -436,6 +512,15 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
         tableLabel={headerTitle}
         onClose={() => setPaymentOpen(false)}
         onConfirm={handlePayConfirm}
+      />
+
+      <ApprovalWaitingModal
+        open={approvalOpen}
+        status={approvalStatus}
+        title="Solicitud enviada"
+        detail="Esperando aprobacion del jefe por Telegram..."
+        error={approvalError}
+        onClose={() => setApprovalOpen(false)}
       />
     </div>
   );

@@ -25,6 +25,7 @@ interface OrderStore {
   removeItem: (itemId: number) => Promise<void>;
   payOrder: (method: 'cash' | 'card') => Promise<void>;
   cancelOrder: () => Promise<void>;
+  sendOrder: () => Promise<void>;
   refreshOrder: () => Promise<void>;
   updateNotes: (notes: string) => Promise<void>;
   moveItems: (
@@ -120,6 +121,13 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       includeTip18: false,
       tipPercent: 18,
     });
+  },
+
+  sendOrder: async () => {
+    const { currentOrder } = get();
+    if (!currentOrder) return;
+    const updated = await ordersApi.send(currentOrder.id);
+    set({ currentOrder: updated });
   },
 
   refreshOrder: async () => {

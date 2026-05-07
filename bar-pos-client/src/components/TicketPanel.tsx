@@ -36,6 +36,7 @@ function LineRow({
   selectable,
   selected,
   onSelect,
+  onRequestVoid,
 }: {
   item: OrderItem;
   onQty: (id: number, q: number) => void;
@@ -43,9 +44,14 @@ function LineRow({
   selectable?: boolean;
   selected?: boolean;
   onSelect?: (id: number) => void;
+  onRequestVoid?: (item: OrderItem) => void;
 }) {
   const startX = useRef<number | null>(null);
   const [offset, setOffset] = useState(0);
+  const itemStatus = item.status ?? 'pending';
+  const locked = itemStatus !== 'pending' || Boolean(item.compType);
+  const voided = itemStatus === 'voided';
+  const comped = Boolean(item.compType);
 
   const onTouchStart = (e: TouchEvent) => {
     startX.current = e.touches[0].clientX;
@@ -56,7 +62,7 @@ function LineRow({
     setOffset(Math.min(0, dx));
   };
   const onTouchEnd = () => {
-    if (offset < -80) onRemove(item.id);
+    if (offset < -80 && !locked) onRemove(item.id);
     setOffset(0);
     startX.current = null;
   };
@@ -64,7 +70,13 @@ function LineRow({
   return (
     <div
       className={`item-enter border-b px-1 py-3 transition-all ${
-        selected ? 'border-[var(--green)] bg-[var(--green-dim)]' : 'border-[var(--border)]'
+        selected
+          ? 'border-[var(--green)] bg-[var(--green-dim)]'
+          : voided
+            ? 'border-[var(--red-pale)] bg-[var(--red-pale)]/40 opacity-70'
+            : comped
+              ? 'border-[var(--green)] bg-[var(--green-pale)]'
+              : 'border-[var(--border)]'
       }`}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
@@ -75,7 +87,7 @@ function LineRow({
         style={{ transform: `translateX(${offset}px)` }}
       >
         <div className="flex min-w-0 flex-1 items-start gap-2">
-          {selectable && (
+          {selectable && !locked && (
             <button
               type="button"
               onClick={() => onSelect?.(item.id)}
@@ -90,6 +102,23 @@ function LineRow({
           )}
           <div className="min-w-0 flex-1">
             <div className="text-sm font-bold text-[var(--text)]">{item.productName}</div>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {itemStatus === 'sent' && (
+                <span className="rounded-full bg-[var(--bg3)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[var(--text3)]">
+                  Enviado
+                </span>
+              )}
+              {voided && (
+                <span className="rounded-full bg-[var(--red)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
+                  Anulado
+                </span>
+              )}
+              {comped && (
+                <span className="rounded-full bg-[var(--green)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
+                  Cortesia
+                </span>
+              )}
+            </div>
             {item.measureName && (
               <div className="text-[10px] font-semibold uppercase text-[var(--text3)]">
                 {item.measureName}
@@ -102,9 +131,9 @@ function LineRow({
           <div className="flex items-center bg-[var(--bg3)] rounded-full p-1">
             <button
               type="button"
-              className="h-7 w-7 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-90 transition-all"
+              className="h-7 w-7 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-90 transition-all disabled:opacity-30"
               onClick={() => onQty(item.id, item.quantity - 1)}
-              disabled={selectable}
+              disabled={selectable || locked}
             >
               <Minus className="h-3 w-3" />
             </button>
@@ -113,16 +142,27 @@ function LineRow({
             </span>
             <button
               type="button"
-              className="h-7 w-7 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-90 transition-all"
+              className="h-7 w-7 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-90 transition-all disabled:opacity-30"
               onClick={() => onQty(item.id, item.quantity + 1)}
-              disabled={selectable}
+              disabled={selectable || locked}
             >
               <Plus className="h-3 w-3" />
             </button>
           </div>
           
-          <div className="text-right min-w-[70px]">
-            <div className="font-black text-[var(--green)] text-sm">{formatMoney(item.subtotal)}</div>
+          <div className="min-w-[70px] text-right">
+            <div className={`text-sm font-black ${voided ? 'text-[var(--red)] line-through' : comped ? 'text-[var(--green)]' : 'text-[var(--green)]'}`}>
+              {comped ? 'CORTESIA' : formatMoney(item.subtotal)}
+            </div>
+            {itemStatus === 'sent' && !voided && !comped && onRequestVoid && (
+              <button
+                type="button"
+                onClick={() => onRequestVoid(item)}
+                className="mt-1 text-[9px] font-black uppercase tracking-wider text-[var(--red)] underline underline-offset-2"
+              >
+                Anular
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -142,6 +182,7 @@ type Props = {
   onRemove: (itemId: number) => void;
   onCancelOrder: () => void | Promise<void>;
   onPay: () => void;
+  onSendOrder?: () => void | Promise<void>;
   onPrintPreBill?: () => void | Promise<void>;
   includeTip18?: boolean;
   onToggleTip18?: (next: boolean) => void;
@@ -160,6 +201,7 @@ type Props = {
     targetTableId: number
   ) => Promise<void>;
   onMerge?: (targetTableId: number) => Promise<void>;
+  onRequestVoid?: (item: OrderItem) => void | Promise<void>;
 };
 
 export default function TicketPanel({
@@ -174,6 +216,7 @@ export default function TicketPanel({
   onRemove,
   onCancelOrder,
   onPay,
+  onSendOrder,
   onPrintPreBill,
   includeTip18 = false,
   onToggleTip18,
@@ -188,6 +231,7 @@ export default function TicketPanel({
   openOrderTableIds = new Set(),
   onMoveItems,
   onMerge,
+  onRequestVoid,
 }: Props) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -201,6 +245,7 @@ export default function TicketPanel({
     ? tipPresets
     : [...tipPresets, tipPercent].sort((a, b) => a - b);
   const canMove = Boolean(onMoveItems || onMerge) && tables.length > 0;
+  const pendingItems = items.filter((it) => (it.status ?? 'pending') === 'pending');
 
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) => {
@@ -286,6 +331,7 @@ export default function TicketPanel({
               selectable={selectMode}
               selected={selectedIds.has(it.id)}
               onSelect={toggleSelect}
+              onRequestVoid={onRequestVoid}
             />
           ))
         )}
@@ -400,6 +446,17 @@ export default function TicketPanel({
                 : ''}
             </button>
           </div>
+        )}
+
+        {onSendOrder && pendingItems.length > 0 && !selectMode && (
+          <button
+            type="button"
+            onClick={() => void onSendOrder()}
+            disabled={busy}
+            className="app-no-drag mb-3 min-h-[48px] w-full rounded-xl bg-[var(--green3)] text-sm font-black uppercase tracking-wider text-white shadow-sm transition hover:bg-[var(--green2)] disabled:opacity-40 active:scale-[0.98]"
+          >
+            Enviar pedido ({pendingItems.length})
+          </button>
         )}
 
         <div className="grid grid-cols-5 gap-2">
