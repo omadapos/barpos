@@ -5,10 +5,19 @@ import { ordersApi } from '@/api/orders.api';
 
 function normalizeTable(t: Table): Table {
   const rawActive = (t as unknown as { active?: boolean | number | string }).active;
+  const normalizedActive =
+    typeof rawActive === 'string' ? rawActive.trim().toLowerCase() : rawActive;
   const active =
-    typeof rawActive === 'string'
-      ? rawActive.toLowerCase() === 'true' || rawActive === '1'
-      : Boolean(rawActive);
+    normalizedActive == null
+      ? true
+      : !(
+          normalizedActive === false ||
+          normalizedActive === 0 ||
+          normalizedActive === 'false' ||
+          normalizedActive === '0' ||
+          normalizedActive === 'f' ||
+          normalizedActive === 'no'
+        );
 
   return {
     ...t,
