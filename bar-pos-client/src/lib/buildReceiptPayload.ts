@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { Order } from '@/types';
 import type { ThermalPrinterSettings } from '@/lib/thermalPrinterConfig';
+import type { Order } from '@/types';
 import {
   computeTipAmount,
   DEFAULT_TIP_PERCENT,
@@ -39,7 +39,7 @@ export interface ReceiptPayload {
   tipAmount?: number;
   /** total + tipAmount */
   grandTotal?: number;
-  /** Elección del mesero (para texto en el ticket aunque el monto sea 0) */
+  /** Eleccion del mesero (para texto en el ticket aunque el monto sea 0) */
   includesTip?: boolean;
   paymentMethod: ReceiptPaymentMethod;
   notes?: string | null;
@@ -50,7 +50,7 @@ function receiptFieldsFromSettings(settings: ThermalPrinterSettings) {
     businessName: (settings.businessName || 'nfarra2').trim(),
     businessAddress: (settings.businessAddress || '').trim(),
     businessPhone: (settings.businessPhone || '').trim(),
-    footerThanks: (settings.footerThanks || '¡Gracias por su visita!').trim(),
+    footerThanks: (settings.footerThanks || 'Gracias por su visita!').trim(),
   };
 }
 
@@ -67,26 +67,28 @@ export function buildReceiptPayload(
   const tipAmount = includeRequested ? computeTipAmount(order, tipPct) : 0;
   const grandTotal = baseTotal + tipAmount;
 
-  const items = (order.items ?? []).map((it) => {
-    const name =
-      it.measureName && !it.productName.includes('—')
-        ? `${it.productName} — ${it.measureName}`
-        : it.productName;
-    return {
-      name,
-      qty: it.quantity,
-      unitPrice: it.unitPrice,
-      subtotal: it.subtotal,
-      measure: it.measureName,
-    };
-  });
+  const items = (order.items ?? [])
+    .filter((it) => (it.status ?? 'pending') !== 'voided' && !it.compType)
+    .map((it) => {
+      const name =
+        it.measureName && !it.productName.includes(' - ')
+          ? `${it.productName} - ${it.measureName}`
+          : it.productName;
+      return {
+        name,
+        qty: it.quantity,
+        unitPrice: it.unitPrice,
+        subtotal: it.subtotal,
+        measure: it.measureName,
+      };
+    });
 
   return {
     ...receiptFieldsFromSettings(settings),
     documentKind,
     tableName: order.tableName || 'Orden',
     orderId: order.id,
-    createdAt: format(new Date(order.createdAt), "dd/MM/yyyy HH:mm", { locale: es }),
+    createdAt: format(new Date(order.createdAt), 'dd/MM/yyyy HH:mm', { locale: es }),
     items,
     subtotal: parseAmount(order.subtotal),
     tax: parseAmount(order.tax),
@@ -98,7 +100,7 @@ export function buildReceiptPayload(
   };
 }
 
-/** Pre-cuenta para el cliente (mismo detalle, sin línea de pago). */
+/** Pre-cuenta para el cliente (mismo detalle, sin linea de pago). */
 export function buildPreBillPayload(
   order: Order,
   settings: ThermalPrinterSettings,

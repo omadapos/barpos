@@ -231,24 +231,25 @@ async function printThermalReceipt(config, payload) {
     }
   }
 
+  const tipAmt = Number(payload.tipAmount) || 0;
+  const tipPctShown = Number(payload.tipPercent);
+  const tipPctLabel = Number.isFinite(tipPctShown) && tipPctShown > 0 ? tipPctShown : 18;
+  if (tipAmt > 0) {
+    printer.leftRight(`1x Propina (${tipPctLabel}%)`, money(tipAmt));
+  }
   printer.drawLine();
   printer.leftRight('Subtotal', money(payload.subtotal));
   if (Number(payload.tax) > 0) {
     printer.leftRight('Impuesto', money(payload.tax));
   }
 
-  const tipAmt = Number(payload.tipAmount) || 0;
   const baseTot = Number(payload.total) || 0;
   const grand =
     Number(payload.grandTotal) || baseTot + tipAmt;
   const hasTip = tipAmt > 0;
   const includesTip = payload.includesTip === true;
-  const tipPctShown = Number(payload.tipPercent);
-  const tipPctLabel = Number.isFinite(tipPctShown) && tipPctShown > 0 ? tipPctShown : 18;
 
   if (hasTip) {
-    printer.leftRight('Total', money(baseTot));
-    printer.leftRight(`Propina (${tipPctLabel}%)`, money(tipAmt));
     printer.bold(true);
     printer.leftRight(isPrebill ? 'A PAGAR' : 'TOTAL A PAGAR', money(grand));
     printer.bold(false);
@@ -262,8 +263,6 @@ async function printThermalReceipt(config, payload) {
   printer.alignCenter();
   if (includesTip && hasTip) {
     printer.println(`*** INCLUYE PROPINA ${tipPctLabel}% ***`);
-  } else {
-    printer.println('*** SIN PROPINA ***');
   }
   printer.alignLeft();
 
