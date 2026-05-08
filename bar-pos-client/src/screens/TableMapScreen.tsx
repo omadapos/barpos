@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import axios from 'axios';
 import { Ticket } from 'lucide-react';
 import TableCard from '@/components/TableCard';
 import TableManagerModal from '@/components/TableManagerModal';
@@ -46,14 +47,19 @@ export default function TableMapScreen({ walkInTick, onNavigateOrder }: Props) {
   const openTable = async (table: Table) => {
     setLoading(true);
     try {
-      let order;
-      const existing = meta(table.id);
-      if (existing) {
-        order = await hydrateOrder(existing);
-      } else {
+      let order = null;
+      try {
+        order = await ordersApi.getByTable(table.id);
+      } catch (e) {
+        const notFound = axios.isAxiosError(e) && e.response?.status === 404;
+        if (!notFound) throw e;
+      }
+
+      if (!order) {
         const created = await ordersApi.create({ tableId: table.id, notes: table.name });
         order = await hydrateOrder(created);
       }
+
       setCurrentOrder(order);
       setActiveCategory(null);
       onNavigateOrder();

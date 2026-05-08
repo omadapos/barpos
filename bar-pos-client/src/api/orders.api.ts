@@ -22,7 +22,9 @@ export const ordersApi = {
     api.get<ApiResponse<Order[]>>('/api/orders/open').then((r) => r.data.data),
 
   getByTable: (tableId: number) =>
-    api.get<ApiResponse<Order>>(`/api/orders/table/${tableId}`).then((r) => r.data.data),
+    api
+      .get<ApiResponse<Order>>(`/api/orders/table/${tableId}`, { skipErrorToast: true })
+      .then((r) => r.data.data),
 
   getById: (id: number) =>
     api.get<ApiResponse<Order>>(`/api/orders/${id}`).then((r) => r.data.data),

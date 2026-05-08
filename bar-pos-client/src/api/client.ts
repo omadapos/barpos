@@ -59,8 +59,11 @@ api.interceptors.response.use(
 
     if (!cfg?.skipErrorToast) {
       const raw = err.response?.data?.error ?? err.response?.data?.message;
+      const noOpenShift = raw === 'no_open_shift' || err.response?.data?.code === 'no_open_shift';
       const msg =
-        typeof raw === 'string'
+        noOpenShift
+          ? 'Debes abrir un turno antes de operar.'
+          : typeof raw === 'string'
           ? raw
           : raw != null
             ? JSON.stringify(raw)

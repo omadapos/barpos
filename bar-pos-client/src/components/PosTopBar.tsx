@@ -4,6 +4,7 @@ import { es } from 'date-fns/locale';
 import { LogOut, Printer, X, Wine } from 'lucide-react';
 import { useConnectionStore } from '@/store/useConnectionStore';
 import PrinterSettingsModal from '@/components/PrinterSettingsModal';
+import type { Shift } from '@/api/shifts.api';
 
 export type MainScreen = 'map' | 'order' | 'reports';
 
@@ -14,6 +15,9 @@ type Props = {
   onGoMap: () => void;
   onGoReports: () => void;
   onQuickSale: () => void;
+  shift: Shift | null;
+  canCloseShift: boolean;
+  onCloseShift: () => void;
   session: { username: string; onSignOut: () => void };
 };
 
@@ -29,6 +33,9 @@ export default function PosTopBar({
   orderContext,
   onGoMap,
   onQuickSale,
+  shift,
+  canCloseShift,
+  onCloseShift,
   session,
 }: Props) {
   const [clock, setClock] = useState(() => new Date());
@@ -42,6 +49,7 @@ export default function PosTopBar({
 
   const tabMesas = main === 'map';
   const tabCaja = main === 'order' && orderContext === 'walkin';
+  const shiftOpenedAt = shift?.openedAt ?? shift?.createdAt;
 
   return (
     <header className="app-drag flex h-16 min-h-[64px] w-full min-w-0 shrink-0 items-center gap-2 border-b border-[var(--border)] bg-white/80 px-6 backdrop-blur-xl md:gap-4 z-[100]">
@@ -86,6 +94,20 @@ export default function PosTopBar({
       {/* Derecha */}
       <div className="app-no-drag flex shrink-0 items-center gap-4">
         <div className="hidden sm:flex items-center gap-3 px-4 py-1.5 rounded-2xl bg-white/50 border border-[var(--border)]">
+          {shift && (
+            <button
+              type="button"
+              onClick={canCloseShift ? onCloseShift : undefined}
+              className={`rounded-xl border px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
+                canCloseShift
+                  ? 'border-[var(--green)] text-[var(--green)] hover:bg-[var(--green-pale)]'
+                  : 'border-[var(--border)] text-[var(--text3)]'
+              }`}
+              title={canCloseShift ? 'Cerrar turno' : 'Turno abierto'}
+            >
+              Turno {shiftOpenedAt ? format(new Date(shiftOpenedAt), 'h:mm a', { locale: es }) : 'abierto'}
+            </button>
+          )}
           <span className="font-black text-sm text-[var(--text2)] tracking-tight">
             {format(clock, 'h:mm a', { locale: es })}
           </span>
