@@ -4,9 +4,15 @@ import { tablesApi } from '@/api/tables.api';
 import { ordersApi } from '@/api/orders.api';
 
 function normalizeTable(t: Table): Table {
+  const rawActive = (t as unknown as { active?: boolean | number | string }).active;
+  const active =
+    typeof rawActive === 'string'
+      ? rawActive.toLowerCase() === 'true' || rawActive === '1'
+      : Boolean(rawActive);
+
   return {
     ...t,
-    active: Boolean((t as unknown as { active?: boolean | number }).active),
+    active,
   };
 }
 
@@ -19,6 +25,7 @@ interface TableStore {
   fetchTables: () => Promise<void>;
   fetchOpenOrders: () => Promise<void>;
   refresh: () => Promise<void>;
+  hideTableLocally: (tableId: number | null | undefined) => void;
 }
 
 export const useTableStore = create<TableStore>((set) => ({
@@ -69,5 +76,19 @@ export const useTableStore = create<TableStore>((set) => ({
       }
     });
     set({ tables: tables.map(normalizeTable), openOrders: map });
+  },
+
+  hideTableLocally: (tableId) => {
+    if (tableId == null) return;
+    set((state) => {
+      const nextOpenOrders = { ...state.openOrders };
+      delete nextOpenOrders[tableId];
+      return {
+        tables: state.tables.map((t) =>
+          t.id === tableId ? { ...t, active: false } : t
+        ),
+        openOrders: nextOpenOrders,
+      };
+    });
   },
 }));

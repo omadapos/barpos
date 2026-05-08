@@ -73,6 +73,7 @@ function OrderProductsPanel({
 export default function OrderScreen({ onBack, onPaid }: Props) {
   const queryClient = useQueryClient();
   const refresh = useTableStore((s) => s.refresh);
+  const hideTableLocally = useTableStore((s) => s.hideTableLocally);
   const tables = useTableStore((s) => s.tables);
   const openOrders = useTableStore((s) => s.openOrders);
   const currentOrder = useOrderStore((s) => s.currentOrder);
@@ -296,10 +297,12 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
   };
 
   const handleMerge = async (targetTableId: number) => {
+    const sourceTableId = currentOrder?.tableId;
     setActionBusy(true);
     try {
       await mergeToTable(targetTableId);
       await refresh();
+      hideTableLocally(sourceTableId);
       toast.success('Mesas unidas');
       onBack();
     } finally {
