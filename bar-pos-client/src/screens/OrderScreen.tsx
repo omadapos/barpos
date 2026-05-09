@@ -386,6 +386,9 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
   const hasPendingItems = () =>
     currentOrder?.items?.some((it) => (it.status ?? 'pending') === 'pending') ?? false;
 
+  const pendingOrderItemsCount =
+    currentOrder?.items?.filter((it) => (it.status ?? 'pending') === 'pending').length ?? 0;
+
   const handleReturnToTables = async () => {
     if (pendingPrintRetry) {
       setActionBusy(true);
@@ -513,15 +516,25 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
                 type="button"
                 onClick={() => void handleReturnToTables()}
                 disabled={actionBusy}
-                title={hasPendingItems() ? 'Enviar pedido y volver a mesas' : 'Volver a mesas'}
+                title={
+                  pendingPrintRetry
+                    ? 'Imprimir pedido y volver a mesas'
+                    : hasPendingItems()
+                      ? 'Enviar pedido y volver a mesas'
+                      : 'Volver a mesas'
+                }
                 className={`flex h-11 min-w-11 items-center justify-center rounded-2xl border px-3 shadow-sm transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-60 ${
-                  hasPendingItems()
+                  pendingPrintRetry || hasPendingItems()
                     ? 'border-[var(--green2)] bg-[var(--green3)] text-white hover:bg-[var(--green2)]'
                     : 'border-[var(--border)] bg-white text-[var(--text2)] hover:bg-[var(--bg3)]'
                 }`}
               >
-                {hasPendingItems() ? (
-                  <span className="text-xs font-black uppercase tracking-wide">Enviar</span>
+                {pendingPrintRetry ? (
+                  <span className="text-xs font-black uppercase tracking-wide">Imprimir y mesas</span>
+                ) : hasPendingItems() ? (
+                  <span className="text-xs font-black uppercase tracking-wide">
+                    Enviar y mesas ({pendingOrderItemsCount})
+                  </span>
                 ) : (
                   <span className="text-xl font-bold">←</span>
                 )}

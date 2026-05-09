@@ -32,7 +32,7 @@ export default function ProductGrid({ products, isBottleCategory, onProduct }: P
 
           <div className="absolute right-3 top-3 opacity-0 transition-opacity group-hover:opacity-100">
             <div className="rounded-full bg-[var(--green)] p-1 text-white shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
             </div>
           </div>
         </button>

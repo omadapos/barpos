@@ -55,6 +55,7 @@ function LineRow({
   const locked = itemStatus !== 'pending' || Boolean(item.compType);
   const voided = itemStatus === 'voided';
   const comped = Boolean(item.compType);
+  const pending = itemStatus === 'pending' && !voided && !comped;
 
   const onTouchStart = (e: TouchEvent) => {
     startX.current = e.touches[0].clientX;
@@ -106,6 +107,11 @@ function LineRow({
           <div className="min-w-0 flex-1">
             <div className="text-sm font-bold text-[var(--text)]">{item.productName}</div>
             <div className="mt-1 flex flex-wrap gap-1">
+              {pending && (
+                <span className="rounded-full bg-[var(--amber)]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[var(--amber)]">
+                  Pendiente
+                </span>
+              )}
               {itemStatus === 'sent' && (
                 <span className="rounded-full bg-[var(--bg3)] px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-[var(--text3)]">
                   Enviado
@@ -255,6 +261,9 @@ export default function TicketPanel({
   const tipOptions = [...TIP_PERCENT_OPTIONS];
   const canMove = Boolean(onMoveItems || onMerge) && tables.length > 0;
   const pendingItems = items.filter((it) => (it.status ?? 'pending') === 'pending');
+  const sentItems = items.filter((it) => (it.status ?? 'pending') === 'sent' && !it.compType);
+  const voidedItems = items.filter((it) => it.status === 'voided');
+  const compedItems = items.filter((it) => Boolean(it.compType));
 
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) => {
@@ -307,6 +316,31 @@ export default function TicketPanel({
           <div className="text-[10px] font-bold uppercase tracking-wide">
             Transcurrido: {elapsed}
           </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide">
+            {items.length} items
+          </span>
+          {pendingItems.length > 0 && (
+            <span className="rounded-full bg-[var(--amber)] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
+              {pendingItems.length} pendientes
+            </span>
+          )}
+          {sentItems.length > 0 && (
+            <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide">
+              {sentItems.length} enviados
+            </span>
+          )}
+          {compedItems.length > 0 && (
+            <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide">
+              {compedItems.length} cortesias
+            </span>
+          )}
+          {voidedItems.length > 0 && (
+            <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide">
+              {voidedItems.length} anulados
+            </span>
+          )}
         </div>
       </div>
 
