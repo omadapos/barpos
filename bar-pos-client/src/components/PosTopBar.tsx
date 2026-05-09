@@ -12,6 +12,8 @@ type Props = {
   main: MainScreen;
   /** En pantalla de orden: mesa vs ticket directo (para tab activo). */
   orderContext?: 'table' | 'walkin' | null;
+  tableButtonState?: 'idle' | 'send' | 'print';
+  pendingItemsCount?: number;
   onGoMap: () => void;
   onGoReports: () => void;
   onQuickSale: () => void;
@@ -31,6 +33,8 @@ function initials(name: string) {
 export default function PosTopBar({
   main,
   orderContext,
+  tableButtonState = 'idle',
+  pendingItemsCount = 0,
   onGoMap,
   onQuickSale,
   shift,
@@ -50,6 +54,12 @@ export default function PosTopBar({
   const tabMesas = main === 'map';
   const tabCaja = main === 'order' && orderContext === 'walkin';
   const shiftOpenedAt = shift?.openedAt ?? shift?.createdAt;
+  const tableButtonLabel =
+    tableButtonState === 'print'
+      ? 'IMPRIMIR Y MESAS'
+      : tableButtonState === 'send'
+        ? `ENVIAR Y MESAS${pendingItemsCount > 0 ? ` (${pendingItemsCount})` : ''}`
+        : 'MESAS';
 
   return (
     <header className="app-drag flex h-16 min-h-[64px] w-full min-w-0 shrink-0 items-center gap-2 border-b border-[var(--border)] bg-white/80 px-6 backdrop-blur-xl md:gap-4 z-[100]">
@@ -72,10 +82,12 @@ export default function PosTopBar({
             className={`whitespace-nowrap rounded-xl px-5 py-2 text-sm font-black transition-all duration-300 ${
               tabMesas
                 ? 'bg-white text-[var(--green)] shadow-sm border border-[var(--border)] scale-105'
+                : tableButtonState !== 'idle'
+                  ? 'bg-[var(--green3)] text-white shadow-sm border border-[var(--green2)] hover:bg-[var(--green2)]'
                 : 'text-[var(--text3)] hover:text-[var(--text)] hover:bg-white/50'
             }`}
           >
-            MESAS
+            {tableButtonLabel}
           </button>
           <button
             type="button"

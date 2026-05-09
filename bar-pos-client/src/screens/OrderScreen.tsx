@@ -33,6 +33,7 @@ type Props = {
   onBack: () => void;
   onPaid: () => void;
   onRegisterReturnToTables?: (handler: (() => Promise<void>) | null) => void;
+  onPrintRetryChange?: (active: boolean) => void;
 };
 
 function OrderProductsPanel({
@@ -71,7 +72,12 @@ function OrderProductsPanel({
   );
 }
 
-export default function OrderScreen({ onBack, onPaid, onRegisterReturnToTables }: Props) {
+export default function OrderScreen({
+  onBack,
+  onPaid,
+  onRegisterReturnToTables,
+  onPrintRetryChange,
+}: Props) {
   const queryClient = useQueryClient();
   const refresh = useTableStore((s) => s.refresh);
   const hideTableLocally = useTableStore((s) => s.hideTableLocally);
@@ -387,9 +393,6 @@ export default function OrderScreen({ onBack, onPaid, onRegisterReturnToTables }
   const hasPendingItems = () =>
     currentOrder?.items?.some((it) => (it.status ?? 'pending') === 'pending') ?? false;
 
-  const pendingOrderItemsCount =
-    currentOrder?.items?.filter((it) => (it.status ?? 'pending') === 'pending').length ?? 0;
-
   const handleReturnToTables = async () => {
     if (pendingPrintRetry) {
       setActionBusy(true);
@@ -421,6 +424,11 @@ export default function OrderScreen({ onBack, onPaid, onRegisterReturnToTables }
     onRegisterReturnToTables?.(handleReturnToTables);
     return () => onRegisterReturnToTables?.(null);
   });
+
+  useEffect(() => {
+    onPrintRetryChange?.(Boolean(pendingPrintRetry));
+    return () => onPrintRetryChange?.(false);
+  }, [pendingPrintRetry, onPrintRetryChange]);
 
   const handleRequestVoid = async (item: OrderItem) => {
     if (!currentOrder) return;
@@ -518,33 +526,6 @@ export default function OrderScreen({ onBack, onPaid, onRegisterReturnToTables }
           {/* Header del Panel */}
           <div className="shrink-0 border-b border-[var(--border)] bg-white/50 px-6 py-4 backdrop-blur-md flex items-center justify-between">
             <div className="flex items-center gap-4">
-               <button
-                type="button"
-                onClick={() => void handleReturnToTables()}
-                disabled={actionBusy}
-                title={
-                  pendingPrintRetry
-                    ? 'Imprimir pedido y volver a mesas'
-                    : hasPendingItems()
-                      ? 'Enviar pedido y volver a mesas'
-                      : 'Volver a mesas'
-                }
-                className={`flex h-11 min-w-11 items-center justify-center rounded-2xl border px-3 shadow-sm transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-60 ${
-                  pendingPrintRetry || hasPendingItems()
-                    ? 'border-[var(--green2)] bg-[var(--green3)] text-white hover:bg-[var(--green2)]'
-                    : 'border-[var(--border)] bg-white text-[var(--text2)] hover:bg-[var(--bg3)]'
-                }`}
-              >
-                {pendingPrintRetry ? (
-                  <span className="text-xs font-black uppercase tracking-wide">Imprimir y mesas</span>
-                ) : hasPendingItems() ? (
-                  <span className="text-xs font-black uppercase tracking-wide">
-                    Enviar y mesas ({pendingOrderItemsCount})
-                  </span>
-                ) : (
-                  <span className="text-xl font-bold">←</span>
-                )}
-              </button>
               <div>
                 <h1 className="text-2xl font-black text-[var(--text)] leading-tight tracking-tight">{headerTitle}</h1>
                 <p className="text-[10px] font-extrabold text-[var(--text3)] uppercase tracking-[0.2em]">Menú Principal</p>

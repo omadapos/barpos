@@ -20,6 +20,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('map');
   const [walkInTick, setWalkInTick] = useState(0);
   const [closeShiftOpen, setCloseShiftOpen] = useState(false);
+  const [printRetryActive, setPrintRetryActive] = useState(false);
   const returnToTablesRef = useRef<(() => Promise<void>) | null>(null);
   const queryClient = useQueryClient();
   const check = useConnectionStore((s) => s.check);
@@ -71,6 +72,14 @@ export default function App() {
         ? 'walkin'
         : 'table'
       : null;
+  const pendingItemsCount =
+    currentOrder?.items?.filter((it) => (it.status ?? 'pending') === 'pending').length ?? 0;
+  const tableButtonState =
+    screen === 'order' && printRetryActive
+      ? 'print'
+      : screen === 'order' && pendingItemsCount > 0
+        ? 'send'
+        : 'idle';
 
   const goMapSafely = () => {
     if (screen === 'order' && returnToTablesRef.current) {
@@ -109,6 +118,8 @@ export default function App() {
       <PosTopBar
         main={screen}
         orderContext={orderContext}
+        tableButtonState={tableButtonState}
+        pendingItemsCount={pendingItemsCount}
         onGoMap={goMapSafely}
         onGoReports={goReportsSafely}
         onQuickSale={quickSaleSafely}
@@ -139,6 +150,7 @@ export default function App() {
             onRegisterReturnToTables={(handler) => {
               returnToTablesRef.current = handler;
             }}
+            onPrintRetryChange={setPrintRetryActive}
           />
         )}
         {!shiftLoading && screen === 'reports' && <ReportsScreen />}
