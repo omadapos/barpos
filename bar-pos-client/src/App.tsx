@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import TableMapScreen from '@/screens/TableMapScreen';
 import OrderScreen from '@/screens/OrderScreen';
@@ -19,6 +20,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('map');
   const [walkInTick, setWalkInTick] = useState(0);
   const [closeShiftOpen, setCloseShiftOpen] = useState(false);
+  const returnToTablesRef = useRef<(() => Promise<void>) | null>(null);
   const queryClient = useQueryClient();
   const check = useConnectionStore((s) => s.check);
   const token = useAuthStore((s) => s.token);
@@ -70,6 +72,34 @@ export default function App() {
         : 'table'
       : null;
 
+  const goMapSafely = () => {
+    if (screen === 'order' && returnToTablesRef.current) {
+      void returnToTablesRef.current();
+      return;
+    }
+    setScreen('map');
+  };
+
+  const goReportsSafely = () => {
+    if (screen === 'order' && returnToTablesRef.current) {
+      toast.error('Primero envia el pedido y vuelve a mesas');
+      void returnToTablesRef.current();
+      return;
+    }
+    setScreen('reports');
+  };
+
+  const quickSaleSafely = () => {
+    if (!currentShift) return;
+    if (screen === 'order' && returnToTablesRef.current) {
+      toast.error('Primero envia el pedido actual');
+      void returnToTablesRef.current();
+      return;
+    }
+    setScreen('map');
+    setWalkInTick((t) => t + 1);
+  };
+
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-[var(--bg)]">
       <Toaster
@@ -79,13 +109,9 @@ export default function App() {
       <PosTopBar
         main={screen}
         orderContext={orderContext}
-        onGoMap={() => setScreen('map')}
-        onGoReports={() => setScreen('reports')}
-        onQuickSale={() => {
-          if (!currentShift) return;
-          setScreen('map');
-          setWalkInTick((t) => t + 1);
-        }}
+        onGoMap={goMapSafely}
+        onGoReports={goReportsSafely}
+        onQuickSale={quickSaleSafely}
         shift={currentShift}
         canCloseShift={user?.role?.toLowerCase() === 'admin'}
         onCloseShift={() => setCloseShiftOpen(true)}
@@ -107,7 +133,13 @@ export default function App() {
           />
         )}
         {!shiftLoading && screen === 'order' && (
-          <OrderScreen onBack={() => setScreen('map')} onPaid={() => setScreen('map')} />
+          <OrderScreen
+            onBack={() => setScreen('map')}
+            onPaid={() => setScreen('map')}
+            onRegisterReturnToTables={(handler) => {
+              returnToTablesRef.current = handler;
+            }}
+          />
         )}
         {!shiftLoading && screen === 'reports' && <ReportsScreen />}
       </div>

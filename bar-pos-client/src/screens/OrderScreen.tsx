@@ -32,6 +32,7 @@ import {
 type Props = {
   onBack: () => void;
   onPaid: () => void;
+  onRegisterReturnToTables?: (handler: (() => Promise<void>) | null) => void;
 };
 
 function OrderProductsPanel({
@@ -70,7 +71,7 @@ function OrderProductsPanel({
   );
 }
 
-export default function OrderScreen({ onBack, onPaid }: Props) {
+export default function OrderScreen({ onBack, onPaid, onRegisterReturnToTables }: Props) {
   const queryClient = useQueryClient();
   const refresh = useTableStore((s) => s.refresh);
   const hideTableLocally = useTableStore((s) => s.hideTableLocally);
@@ -415,6 +416,11 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
     await refresh();
     onBack();
   };
+
+  useEffect(() => {
+    onRegisterReturnToTables?.(handleReturnToTables);
+    return () => onRegisterReturnToTables?.(null);
+  });
 
   const handleRequestVoid = async (item: OrderItem) => {
     if (!currentOrder) return;
