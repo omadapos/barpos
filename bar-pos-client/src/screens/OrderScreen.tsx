@@ -363,6 +363,18 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
     }
   };
 
+  const hasPendingItems = () =>
+    currentOrder?.items?.some((it) => (it.status ?? 'pending') === 'pending') ?? false;
+
+  const handleReturnToTables = async () => {
+    if (hasPendingItems()) {
+      await handleSendOrder();
+      return;
+    }
+    await refresh();
+    onBack();
+  };
+
   const handleRequestVoid = async (item: OrderItem) => {
     if (!currentOrder) return;
     setActionBusy(true);
@@ -461,13 +473,20 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
             <div className="flex items-center gap-4">
                <button
                 type="button"
-                onClick={async () => {
-                  await refresh();
-                  onBack();
-                }}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-white text-[var(--text2)] shadow-sm transition-all hover:bg-[var(--bg3)] active:scale-90"
+                onClick={() => void handleReturnToTables()}
+                disabled={actionBusy}
+                title={hasPendingItems() ? 'Enviar pedido y volver a mesas' : 'Volver a mesas'}
+                className={`flex h-11 min-w-11 items-center justify-center rounded-2xl border px-3 shadow-sm transition-all active:scale-90 disabled:cursor-not-allowed disabled:opacity-60 ${
+                  hasPendingItems()
+                    ? 'border-[var(--green2)] bg-[var(--green3)] text-white hover:bg-[var(--green2)]'
+                    : 'border-[var(--border)] bg-white text-[var(--text2)] hover:bg-[var(--bg3)]'
+                }`}
               >
-                <span className="text-xl font-bold">←</span>
+                {hasPendingItems() ? (
+                  <span className="text-xs font-black uppercase tracking-wide">Enviar</span>
+                ) : (
+                  <span className="text-xl font-bold">←</span>
+                )}
               </button>
               <div>
                 <h1 className="text-2xl font-black text-[var(--text)] leading-tight tracking-tight">{headerTitle}</h1>
@@ -529,7 +548,6 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
               }
               setPaymentOpen(true);
             }}
-            onSendOrder={handleSendOrder}
             onPrintPreBill={handlePrintPreBill}
             includeTip18={includeTip18}
             onToggleTip18={setIncludeTip18}
