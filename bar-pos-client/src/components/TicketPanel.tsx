@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { TouchEvent } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -7,6 +7,9 @@ import type { OrderItem, Table } from '@/types';
 import { formatMoney } from '@/lib/format';
 import OrderNoteModal from '@/components/OrderNoteModal';
 import MoveTableModal from '@/components/MoveTableModal';
+
+/** Porcentajes disponibles en el combobox de propina (sin 20/22/25). */
+const TIP_PERCENT_OPTIONS = [10, 12, 15, 18] as const;
 
 function useElapsedLabel(createdAt: string) {
   const [label, setLabel] = useState('');
@@ -186,7 +189,7 @@ type Props = {
   onPrintPreBill?: () => void | Promise<void>;
   includeTip18?: boolean;
   onToggleTip18?: (next: boolean) => void;
-  /** Porcentaje de propina (10–25 típico; por defecto 18). */
+  /** Porcentaje de propina (opciones del combobox; por defecto 18). */
   tipPercent?: number;
   onTipPercentChange?: (pct: number) => void;
   tipAmount?: number;
@@ -240,10 +243,16 @@ export default function TicketPanel({
   const [moveModal, setMoveModal] = useState<'move' | 'merge' | null>(null);
   const elapsed = useElapsedLabel(createdAt);
   const started = format(new Date(createdAt), 'h:mm a', { locale: es });
-  const tipPresets = [10, 12, 15, 18, 20, 22, 25];
-  const tipOptions = tipPresets.includes(tipPercent)
-    ? tipPresets
-    : [...tipPresets, tipPercent].sort((a, b) => a - b);
+
+  useLayoutEffect(() => {
+    if (!includeTip18 || !onTipPercentChange) return;
+    const allowed = TIP_PERCENT_OPTIONS as readonly number[];
+    if (!allowed.includes(tipPercent)) {
+      onTipPercentChange(18);
+    }
+  }, [includeTip18, tipPercent, onTipPercentChange]);
+
+  const tipOptions = [...TIP_PERCENT_OPTIONS];
   const canMove = Boolean(onMoveItems || onMerge) && tables.length > 0;
   const pendingItems = items.filter((it) => (it.status ?? 'pending') === 'pending');
 
