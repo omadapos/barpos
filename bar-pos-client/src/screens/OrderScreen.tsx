@@ -13,7 +13,7 @@ import { categoriesApi } from '@/api/categories.api';
 import { productsApi } from '@/api/products.api';
 import { useOrderStore } from '@/store/useOrderStore';
 import { useTableStore } from '@/store/useTableStore';
-import type { BottleMeasure, Order, OrderItem, Product } from '@/types';
+import type { BottleMeasure, Order, OrderItem, Product, StationPrintJob } from '@/types';
 import { buildPreBillPayload, buildReceiptPayload } from '@/lib/buildReceiptPayload';
 import { buildStationPrintPayload } from '@/lib/buildStationPrintPayload';
 import {
@@ -103,6 +103,10 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
   const [approvalOpen, setApprovalOpen] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus | 'idle'>('idle');
   const [approvalError, setApprovalError] = useState('');
+  const [pendingPrintRetry, setPendingPrintRetry] = useState<{
+    order: Order;
+    jobs: StationPrintJob[];
+  } | null>(null);
 
   const { data: categoriesRaw = [], isLoading: catLoading } = useQuery({
     queryKey: ['categories'],
@@ -310,54 +314,70 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
     }
   };
 
+  const printStationJobs = async (order: Order, printJobs: StationPrintJob[]) => {
+    const settings = loadThermalSettings();
+    const printApi = window.electronEnv?.printThermalReceipt;
+    const printableJobs = printJobs.filter((job) => job.items?.length);
+    const failures: string[] = [];
+
+    if (printableJobs.length > 0) {
+      if (!printApi) {
+        failures.push('impresion de comandas solo disponible en escritorio');
+      } else {
+        for (const job of printableJobs) {
+          if (job.station !== 'bar' && job.station !== 'kitchen') continue;
+          const station = job.station as PrintStationKey;
+          const stationConfig = settings.stationPrinters[station];
+
+          const payload = buildStationPrintPayload(order, job);
+          const printResult = await printApi({
+            config: (
+              stationConfig.enabled
+                ? toStationElectronPrintConfig(settings, station)
+                : toElectronPrintConfig(settings)
+            ) as Record<string, unknown>,
+            payload: { ...payload } as Record<string, unknown>,
+          });
+          if (!printResult.ok) {
+            failures.push(`${job.stationName || station}: ${printResult.error || 'error al imprimir'}`);
+          }
+        }
+      }
+    }
+
+    return {
+      failures,
+      printableCount: printableJobs.length,
+    };
+  };
+
   const handleSendOrder = async () => {
     if (!currentOrder?.items?.some((it) => (it.status ?? 'pending') === 'pending')) {
       toast.error('No hay productos nuevos para enviar');
-      return;
+      return false;
     }
     setActionBusy(true);
     try {
       const result = await sendOrder();
-      if (!result) return;
+      if (!result) return false;
 
-      const settings = loadThermalSettings();
-      const printApi = window.electronEnv?.printThermalReceipt;
       const printJobs = result.printJobs ?? [];
-      const printableJobs = printJobs.filter((job) => job.items?.length);
-      const failures: string[] = [];
-
-      if (printableJobs.length > 0) {
-        if (!printApi) {
-          failures.push('impresion de comandas solo disponible en escritorio');
-        } else {
-          for (const job of printableJobs) {
-            if (job.station !== 'bar' && job.station !== 'kitchen') continue;
-            const station = job.station as PrintStationKey;
-            const stationConfig = settings.stationPrinters[station];
-
-            const payload = buildStationPrintPayload(result.order, job);
-            const printResult = await printApi({
-              config: (
-                stationConfig.enabled
-                  ? toStationElectronPrintConfig(settings, station)
-                  : toElectronPrintConfig(settings)
-              ) as Record<string, unknown>,
-              payload: { ...payload } as Record<string, unknown>,
-            });
-            if (!printResult.ok) {
-              failures.push(`${job.stationName || station}: ${printResult.error || 'error al imprimir'}`);
-            }
-          }
-        }
-      }
+      const { failures, printableCount } = await printStationJobs(result.order, printJobs);
 
       await refresh();
       if (failures.length) {
-        toast.error(`Pedido enviado, pero ${failures[0]}`);
-      } else {
-        toast.success(printableJobs.length ? 'Pedido enviado e impreso' : 'Pedido enviado');
+        setPendingPrintRetry({ order: result.order, jobs: printJobs });
+        toast.error(`Pedido enviado, pero ${failures[0]}. No se puede volver a mesas hasta imprimir.`);
+        return false;
       }
+
+      setPendingPrintRetry(null);
+      toast.success(printableCount ? 'Pedido enviado e impreso' : 'Pedido enviado');
       onBack();
+      return true;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'No se pudo enviar el pedido');
+      return false;
     } finally {
       setActionBusy(false);
     }
@@ -367,6 +387,24 @@ export default function OrderScreen({ onBack, onPaid }: Props) {
     currentOrder?.items?.some((it) => (it.status ?? 'pending') === 'pending') ?? false;
 
   const handleReturnToTables = async () => {
+    if (pendingPrintRetry) {
+      setActionBusy(true);
+      try {
+        const { failures } = await printStationJobs(pendingPrintRetry.order, pendingPrintRetry.jobs);
+        if (failures.length) {
+          toast.error(`${failures[0]}. No se puede volver a mesas hasta imprimir.`);
+          return;
+        }
+        setPendingPrintRetry(null);
+        await refresh();
+        toast.success('Pedido impreso');
+        onBack();
+      } finally {
+        setActionBusy(false);
+      }
+      return;
+    }
+
     if (hasPendingItems()) {
       await handleSendOrder();
       return;
