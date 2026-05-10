@@ -295,7 +295,12 @@ export default function PrinterSettingsModal({ open, onClose }: Props) {
           onClick={(e) => e.stopPropagation()}
         >
         <div className="mb-4 flex items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-[var(--text)]">Impresora térmica 80 mm</h2>
+          <div>
+            <h2 className="text-lg font-bold text-[var(--text)]">Configuracion</h2>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text3)]">
+              Impresoras y tickets
+            </p>
+          </div>
           <button
             type="button"
             onClick={onClose}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { LogOut, Printer, SquarePower, X, Wine } from 'lucide-react';
+import { LogOut, Settings, SquarePower, X, Wine } from 'lucide-react';
 import { useConnectionStore } from '@/store/useConnectionStore';
 import PrinterSettingsModal from '@/components/PrinterSettingsModal';
 import type { Shift } from '@/api/shifts.api';
@@ -43,7 +43,7 @@ export default function PosTopBar({
   session,
 }: Props) {
   const [clock, setClock] = useState(() => new Date());
-  const [printerOpen, setPrinterOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const online = useConnectionStore((s) => s.online);
 
   useEffect(() => {
@@ -169,16 +169,14 @@ export default function PosTopBar({
             </button>
           )}
 
-          {window.electronEnv?.printThermalReceipt && (
-            <button
-              type="button"
-              onClick={() => setPrinterOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-[var(--border)] text-[var(--text2)] shadow-sm transition-all hover:bg-[var(--bg3)] active:scale-90"
-              title="Ajustes de Impresora"
-            >
-              <Printer className="h-5 w-5" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-[var(--border)] text-[var(--text2)] shadow-sm transition-all hover:bg-[var(--bg3)] active:scale-90"
+            title="Configuracion"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
 
           {window.electronEnv?.closeWindow && (
             <button
@@ -193,7 +191,7 @@ export default function PosTopBar({
         </div>
       </div>
 
-      <PrinterSettingsModal open={printerOpen} onClose={() => setPrinterOpen(false)} />
+      <PrinterSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </header>
   );
 }

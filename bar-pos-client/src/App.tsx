@@ -134,7 +134,7 @@ export default function App() {
         onGoReports={goReportsSafely}
         onQuickSale={quickSaleSafely}
         shift={currentShift}
-        canCloseShift={user?.role?.toLowerCase() === 'admin'}
+        canCloseShift={Boolean(currentShift)}
         onCloseShift={() => setCloseShiftOpen(true)}
         session={{
           username: user?.username ?? 'Usuario',
