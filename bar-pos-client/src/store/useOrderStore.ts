@@ -23,7 +23,10 @@ interface OrderStore {
   addMeasuredItem: (product: Product, measure: BottleMeasure) => Promise<void>;
   updateQuantity: (itemId: number, qty: number) => Promise<void>;
   removeItem: (itemId: number) => Promise<void>;
-  payOrder: (method: 'cash' | 'card') => Promise<void>;
+  payOrder: (
+    method: 'cash' | 'card',
+    tip?: { tipAmount: number; tipPercent: number; totalPaid: number }
+  ) => Promise<void>;
   cancelOrder: () => Promise<void>;
   sendOrder: () => Promise<{ order: Order; printJobs: StationPrintJob[] } | null>;
   refreshOrder: () => Promise<void>;
@@ -95,10 +98,10 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     await get().refreshOrder();
   },
 
-  payOrder: async (method) => {
+  payOrder: async (method, tip) => {
     const { currentOrder } = get();
     if (!currentOrder) return;
-    await ordersApi.pay(currentOrder.id, method);
+    await ordersApi.pay(currentOrder.id, method, tip);
     set({
       currentOrder: null,
       activeCategory: null,

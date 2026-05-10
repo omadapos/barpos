@@ -47,7 +47,15 @@ export default function CloseShiftModal({ open, onClose, onClosed }: Props) {
     summary?.cardSales ?? summary?.totalCard ?? summary?.cardTotal ?? summary?.salesCard
   );
   const orders = num(summary?.orderCount ?? summary?.totalOrders);
-  const tips = num(summary?.tips ?? summary?.totalTips);
+  const tips = num(
+    summary?.tips ??
+      summary?.totalTips ??
+      summary?.tipAmount ??
+      summary?.totalTipAmount ??
+      summary?.gratuity ??
+      summary?.gratuityTotal ??
+      summary?.serviceCharge
+  );
   const openingCash = num(currentShift?.openingCash);
   const countedCash = num(closingCash);
   const expectedCash = openingCash + cashSales;

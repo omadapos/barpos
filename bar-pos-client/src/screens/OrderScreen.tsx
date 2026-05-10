@@ -247,7 +247,17 @@ export default function OrderScreen({
     };
     const { includeTip18: withTip, tipPercent: pctTip } = useOrderStore.getState();
     try {
-      await payOrder(method);
+      const payTipAmount = withTip ? computeTipAmount(snapshot, pctTip) : 0;
+      await payOrder(
+        method,
+        payTipAmount > 0
+          ? {
+              tipAmount: payTipAmount,
+              tipPercent: pctTip,
+              totalPaid: orderTotalForTip(snapshot) + payTipAmount,
+            }
+          : undefined
+      );
       toast.success('¡Pago registrado!');
       setPaymentOpen(false);
 

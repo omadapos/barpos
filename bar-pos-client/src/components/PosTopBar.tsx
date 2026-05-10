@@ -107,18 +107,12 @@ export default function PosTopBar({
       <div className="app-no-drag flex shrink-0 items-center gap-4">
         <div className="hidden sm:flex items-center gap-3 px-4 py-1.5 rounded-2xl bg-white/50 border border-[var(--border)]">
           {shift && (
-            <button
-              type="button"
-              onClick={canCloseShift ? onCloseShift : undefined}
-              className={`rounded-xl border px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
-                canCloseShift
-                  ? 'border-[var(--green)] text-[var(--green)] hover:bg-[var(--green-pale)]'
-                  : 'border-[var(--border)] text-[var(--text3)]'
-              }`}
-              title={canCloseShift ? 'Cerrar turno' : 'Turno abierto'}
+            <div
+              className="rounded-xl border border-[var(--border)] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[var(--text3)]"
+              title="Turno abierto"
             >
               Turno {shiftOpenedAt ? format(new Date(shiftOpenedAt), 'h:mm a', { locale: es }) : 'abierto'}
-            </button>
+            </div>
           )}
           <span className="font-black text-sm text-[var(--text2)] tracking-tight">
             {format(clock, 'h:mm a', { locale: es })}

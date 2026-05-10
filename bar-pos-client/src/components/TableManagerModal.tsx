@@ -74,6 +74,7 @@ export default function TableManagerModal({ open, onClose }: Props) {
       setName('');
       setCapacity(4);
       await refresh();
+      onClose();
     } finally {
       setBusy(false);
     }

@@ -25,6 +25,11 @@ export type ShiftSummary = {
   totalOrders?: number;
   tips?: number;
   totalTips?: number;
+  tipAmount?: number;
+  totalTipAmount?: number;
+  gratuity?: number;
+  gratuityTotal?: number;
+  serviceCharge?: number;
   [key: string]: unknown;
 };
 

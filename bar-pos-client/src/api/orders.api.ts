@@ -53,9 +53,13 @@ export const ordersApi = {
       .delete<ApiResponse<Order>>(`/api/orders/${orderId}/items/${itemId}`)
       .then((r) => r.data.data),
 
-  pay: (orderId: number, paymentMethod: 'cash' | 'card') =>
+  pay: (
+    orderId: number,
+    paymentMethod: 'cash' | 'card',
+    tip?: { tipAmount: number; tipPercent: number; totalPaid: number }
+  ) =>
     api
-      .post<ApiResponse<Order>>(`/api/orders/${orderId}/pay`, { paymentMethod })
+      .post<ApiResponse<Order>>(`/api/orders/${orderId}/pay`, { paymentMethod, ...tip })
       .then((r) => r.data.data),
 
   cancel: (orderId: number) =>
