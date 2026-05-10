@@ -143,7 +143,7 @@ export default function PosTopBar({
           <button
             type="button"
             onClick={session.onSignOut}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 shadow-sm transition-all hover:bg-white/10 hover:text-white active:scale-90"
+            className="hidden"
             title="Cerrar Sesión"
           >
             <LogOut className="h-5 w-5" />
