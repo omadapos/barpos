@@ -6,6 +6,7 @@ import TableMapScreen from '@/screens/TableMapScreen';
 import OrderScreen from '@/screens/OrderScreen';
 import ReportsScreen from '@/screens/ReportsScreen';
 import PosTopBar from '@/components/PosTopBar';
+import BottomStatusBar from '@/components/BottomStatusBar';
 import { LoginScreen } from '@/screens/LoginScreen';
 import CloseShiftModal from '@/components/CloseShiftModal';
 import OpenShiftModal from '@/components/OpenShiftModal';
@@ -165,6 +166,7 @@ export default function App() {
         )}
         {!shiftLoading && screen === 'reports' && <ReportsScreen />}
       </div>
+      <BottomStatusBar />
       <OpenShiftModal open={!shiftLoading && !currentShift} />
       <CloseShiftModal
         open={closeShiftOpen}
