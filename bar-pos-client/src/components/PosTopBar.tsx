@@ -81,10 +81,10 @@ export default function PosTopBar({
             onClick={onGoMap}
             className={`whitespace-nowrap rounded-xl px-5 py-2 text-sm font-black transition-all duration-300 ${
               tabMesas
-                ? 'bg-white/10 text-white shadow-sm border border-white/10 scale-105'
+                ? 'border border-white/30 bg-white/10 text-white shadow-sm scale-105'
                 : tableButtonState !== 'idle'
-                  ? 'bg-[var(--green3)] text-white shadow-sm border border-[var(--green2)] hover:bg-[var(--green2)]'
-                : 'text-slate-400 hover:text-white hover:bg-white/10'
+                  ? 'border border-white/30 bg-[var(--green3)] text-white shadow-sm hover:bg-[var(--green2)]'
+                : 'border border-white/15 bg-white/[0.03] text-slate-400 hover:border-white/25 hover:bg-white/10 hover:text-white'
             }`}
           >
             {tableButtonLabel}
@@ -94,8 +94,8 @@ export default function PosTopBar({
             onClick={onQuickSale}
             className={`whitespace-nowrap rounded-xl px-5 py-2 text-sm font-black transition-all duration-300 ${
               tabCaja
-                ? 'bg-white/10 text-white shadow-sm border border-white/10 scale-105'
-                : 'text-slate-400 hover:text-white hover:bg-white/10'
+                ? 'border border-white/30 bg-white/10 text-white shadow-sm scale-105'
+                : 'border border-white/15 bg-white/[0.03] text-slate-400 hover:border-white/25 hover:bg-white/10 hover:text-white'
             }`}
           >
             CAJA RÁPIDA

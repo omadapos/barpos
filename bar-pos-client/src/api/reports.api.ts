@@ -6,10 +6,13 @@ import type { CategoryReport, ProductReport, ReportSummary, TableReport } from '
 type SummaryDto = {
   from?: string;
   to?: string;
-  orderCount: number;
+  orderCount?: number;
+  totalTickets?: number;
   itemCount?: number;
-  totalRevenue: number;
-  averageTicket: number;
+  totalRevenue?: number;
+  totalSales?: number;
+  averageTicket?: number;
+  avgTicket?: number;
   topPaymentMethod?: string | null;
 };
 
@@ -31,9 +34,9 @@ function humanizeTopPayment(raw?: string | null): string {
 
 function mapSummary(d: SummaryDto): ReportSummary {
   return {
-    totalSales: d.totalRevenue,
-    totalTickets: d.orderCount,
-    avgTicket: d.averageTicket,
+    totalSales: d.totalRevenue ?? d.totalSales ?? 0,
+    totalTickets: d.orderCount ?? d.totalTickets ?? 0,
+    avgTicket: d.averageTicket ?? d.avgTicket ?? 0,
     topPaymentMethod: humanizeTopPayment(d.topPaymentMethod),
   };
 }
