@@ -33,9 +33,6 @@ export default function ProductGrid({ products, isBottleCategory, onProduct }: P
                     e.currentTarget.style.display = 'none';
                   }}
                 />
-                <div className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-xl shadow-sm backdrop-blur-sm">
-                  {fallbackIcon}
-                </div>
               </div>
             ) : (
               <div className="mx-4 mt-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--bg3)] text-2xl transition-colors group-hover:bg-[var(--green-pale)]">
