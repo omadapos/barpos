@@ -113,7 +113,7 @@ export default function TableMapScreen({ walkInTick, onNavigateOrder }: Props) {
       )}
 
       {/* Header Premium con Glassmorphism */}
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--border)] bg-white/70 px-8 py-5 backdrop-blur-md">
+      <div className="flex min-h-[72px] shrink-0 items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--green-pale)]/70 px-8 py-3 backdrop-blur-md">
         <div>
           <h1 className="text-2xl font-black text-[var(--text)] tracking-tight">Mapa de Mesas</h1>
           <p className="text-[10px] font-extrabold text-[var(--text3)] uppercase tracking-[0.2em]">Selección de Ubicación</p>

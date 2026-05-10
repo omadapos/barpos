@@ -21,7 +21,7 @@ export default function CategoryGrid({ categories, activeCategory, onSelect }: P
                 className={`flex min-h-[58px] items-center justify-center rounded-2xl px-4 py-3 text-center transition-all duration-200 active:scale-90 ${
                   active
                     ? 'border-2 border-[var(--green)] bg-white text-[var(--green)] shadow-md shadow-black/5'
-                    : 'border border-transparent bg-white/20 text-[var(--text2)] hover:bg-white/60'
+                    : 'border border-white/70 bg-white/45 text-[var(--text2)] shadow-sm shadow-black/5 hover:bg-white/70 hover:shadow-md'
                 }`}
               >
                 <span className="text-sm font-black uppercase leading-tight tracking-normal">{c.name}</span>
