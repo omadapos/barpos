@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { LogOut, Settings, SquarePower, X, Wine } from 'lucide-react';
+import { LogOut, Settings, SquarePower, Wine } from 'lucide-react';
 import { useConnectionStore } from '@/store/useConnectionStore';
 import PrinterSettingsModal from '@/components/PrinterSettingsModal';
 import type { Shift } from '@/api/shifts.api';
@@ -172,16 +172,14 @@ export default function PosTopBar({
             <Settings className="h-5 w-5" />
           </button>
 
-          {window.electronEnv?.closeWindow && (
-            <button
-              type="button"
-              onClick={() => window.electronEnv?.closeWindow()}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 shadow-sm transition-all hover:bg-[var(--red)]/15 hover:text-red-300 active:scale-90"
-              title="Cerrar Ventana"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={session.onSignOut}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 shadow-sm transition-all hover:bg-[var(--red)]/15 hover:text-red-300 active:scale-90"
+            title="Cerrar sesion"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
         </div>
       </div>
 

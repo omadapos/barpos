@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { ChevronLeft, Wine, Settings } from 'lucide-react';
+import { ChevronLeft, Wine, Settings, X } from 'lucide-react';
 import { authApi } from '@/api/auth.api';
 import { getAppKey } from '@/config/tenant';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -101,6 +101,18 @@ export function LoginScreen() {
         <Settings className="h-5 w-5 text-[var(--green)]" />
         <span className="text-xs font-black uppercase tracking-widest">Ajustes</span>
       </button>
+
+      {window.electronEnv?.closeWindow && (
+        <button
+          type="button"
+          onClick={() => window.electronEnv?.closeWindow()}
+          className="fixed top-6 left-6 z-[50] flex items-center gap-2 rounded-2xl bg-white px-4 py-2 text-[var(--text)] shadow-xl transition-all hover:bg-[var(--red-pale)] hover:text-[var(--red)] active:scale-90"
+          title="Cerrar programa"
+        >
+          <X className="h-5 w-5" />
+          <span className="text-xs font-black uppercase tracking-widest">Cerrar</span>
+        </button>
+      )}
 
       <div
         className={`w-full max-w-sm rounded-[2rem] bg-white/95 p-8 shadow-2xl backdrop-blur-sm transition-all sm:p-10 ${
