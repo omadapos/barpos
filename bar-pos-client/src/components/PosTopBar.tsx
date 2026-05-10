@@ -62,16 +62,16 @@ export default function PosTopBar({
         : 'MESAS';
 
   return (
-    <header className="app-drag flex h-16 min-h-[64px] w-full min-w-0 shrink-0 items-center gap-2 border-b border-[var(--border)] bg-white/80 px-6 backdrop-blur-xl md:gap-4 z-[100]">
+    <header className="app-drag flex h-16 min-h-[64px] w-full min-w-0 shrink-0 items-center gap-2 border-b border-white/10 bg-[#10151b] px-6 text-white shadow-[0_10px_30px_rgba(15,23,42,0.22)] md:gap-4 z-[100]">
       {/* Izquierda: logo + tabs */}
       <div className="app-no-drag flex min-w-0 flex-1 items-center gap-6 overflow-hidden">
         <div className="flex shrink-0 items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--green)] to-[var(--green3)] text-white shadow-lg shadow-[var(--green)]/20">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--green2)] to-[var(--green3)] text-white shadow-lg shadow-[var(--green)]/25">
             <Wine className="h-6 w-6" />
           </div>
           <div className="hidden lg:block">
-            <div className="text-lg font-black tracking-tighter text-[var(--text)] leading-none">Bar POS</div>
-            <div className="text-[9px] font-black text-[var(--green)] uppercase tracking-[0.2em] mt-0.5">Premium</div>
+            <div className="text-lg font-black tracking-tighter text-white leading-none">Bar POS</div>
+            <div className="text-[9px] font-black text-[var(--green2)] uppercase tracking-[0.2em] mt-0.5">Premium</div>
           </div>
         </div>
 
@@ -81,10 +81,10 @@ export default function PosTopBar({
             onClick={onGoMap}
             className={`whitespace-nowrap rounded-xl px-5 py-2 text-sm font-black transition-all duration-300 ${
               tabMesas
-                ? 'bg-white text-[var(--green)] shadow-sm border border-[var(--border)] scale-105'
+                ? 'bg-white/10 text-white shadow-sm border border-white/10 scale-105'
                 : tableButtonState !== 'idle'
                   ? 'bg-[var(--green3)] text-white shadow-sm border border-[var(--green2)] hover:bg-[var(--green2)]'
-                : 'text-[var(--text3)] hover:text-[var(--text)] hover:bg-white/50'
+                : 'text-slate-400 hover:text-white hover:bg-white/10'
             }`}
           >
             {tableButtonLabel}
@@ -94,8 +94,8 @@ export default function PosTopBar({
             onClick={onQuickSale}
             className={`whitespace-nowrap rounded-xl px-5 py-2 text-sm font-black transition-all duration-300 ${
               tabCaja
-                ? 'bg-white text-[var(--green)] shadow-sm border border-[var(--border)] scale-105'
-                : 'text-[var(--text3)] hover:text-[var(--text)] hover:bg-white/50'
+                ? 'bg-white/10 text-white shadow-sm border border-white/10 scale-105'
+                : 'text-slate-400 hover:text-white hover:bg-white/10'
             }`}
           >
             CAJA RÁPIDA
@@ -105,16 +105,16 @@ export default function PosTopBar({
 
       {/* Derecha */}
       <div className="app-no-drag flex shrink-0 items-center gap-4">
-        <div className="hidden sm:flex items-center gap-3 px-4 py-1.5 rounded-2xl bg-white/50 border border-[var(--border)]">
+        <div className="hidden sm:flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-1.5">
           {shift && (
             <div
-              className="rounded-xl border border-[var(--border)] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[var(--text3)]"
+              className="rounded-xl border border-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-300"
               title="Turno abierto"
             >
               Turno {shiftOpenedAt ? format(new Date(shiftOpenedAt), 'h:mm a', { locale: es }) : 'abierto'}
             </div>
           )}
-          <span className="font-black text-sm text-[var(--text2)] tracking-tight">
+          <span className="font-black text-sm text-white tracking-tight">
             {format(clock, 'h:mm a', { locale: es })}
           </span>
           <div title={online ? 'Conectado' : 'Sin conexión'} className="flex items-center">
@@ -129,33 +129,33 @@ export default function PosTopBar({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2.5 pl-2">
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 text-xs font-black text-white shadow-lg"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-600 to-slate-800 text-xs font-black text-white shadow-lg"
               title={session.username}
             >
               {initials(session.username)}
             </div>
             <div className="hidden xl:block">
-               <div className="text-xs font-black text-[var(--text)] leading-none">{session.username}</div>
-               <div className="text-[9px] font-bold text-[var(--text3)] uppercase mt-0.5">Operador</div>
+               <div className="text-xs font-black text-white leading-none">{session.username}</div>
+               <div className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Operador</div>
             </div>
           </div>
           
           <button
             type="button"
             onClick={session.onSignOut}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-[var(--border)] text-[var(--text2)] shadow-sm transition-all hover:bg-[var(--red-pale)] hover:text-[var(--red)] hover:border-[var(--red-pale)] active:scale-90"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 shadow-sm transition-all hover:bg-white/10 hover:text-white active:scale-90"
             title="Cerrar Sesión"
           >
             <LogOut className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex items-center gap-2 border-l border-[var(--border)] pl-4">
+        <div className="flex items-center gap-2 border-l border-white/10 pl-4">
           {shift && canCloseShift && (
             <button
               type="button"
               onClick={onCloseShift}
-              className="flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--red)]/30 bg-[var(--red-pale)] px-3 text-xs font-black uppercase tracking-wide text-[var(--red)] shadow-sm transition-all hover:bg-[var(--red)] hover:text-white active:scale-90"
+              className="flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--red)]/30 bg-[var(--red)]/10 px-3 text-xs font-black uppercase tracking-wide text-red-300 shadow-sm transition-all hover:bg-[var(--red)] hover:text-white active:scale-90"
               title="Cerrar turno"
             >
               <SquarePower className="h-4 w-4" />
@@ -166,7 +166,7 @@ export default function PosTopBar({
           <button
             type="button"
             onClick={() => setSettingsOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-[var(--border)] text-[var(--text2)] shadow-sm transition-all hover:bg-[var(--bg3)] active:scale-90"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 shadow-sm transition-all hover:bg-white/10 hover:text-white active:scale-90"
             title="Configuracion"
           >
             <Settings className="h-5 w-5" />
@@ -176,7 +176,7 @@ export default function PosTopBar({
             <button
               type="button"
               onClick={() => window.electronEnv?.closeWindow()}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-[var(--border)] text-[var(--text2)] shadow-sm transition-all hover:bg-[var(--red-pale)] hover:text-[var(--red)] hover:border-[var(--red-pale)] active:scale-90"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 shadow-sm transition-all hover:bg-[var(--red)]/15 hover:text-red-300 active:scale-90"
               title="Cerrar Ventana"
             >
               <X className="h-5 w-5" />
