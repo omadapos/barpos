@@ -297,14 +297,29 @@ export default function TicketPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
-      <div className="flex min-h-[92px] shrink-0 flex-col justify-center bg-gradient-to-r from-[var(--green)] to-[var(--green3)] p-4 text-white shadow-lg">
+      <div className="flex min-h-[76px] shrink-0 flex-col justify-center bg-gradient-to-r from-[var(--green)] to-[var(--green3)] p-4 text-white shadow-lg">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <ReceiptText className="h-5 w-5 opacity-80" />
             <h2 className="text-lg font-black tracking-tight">{title}</h2>
           </div>
-          <div className="rounded-full bg-white/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm">
-            Abierta
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
+            <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest backdrop-blur-sm">
+              Abierta
+            </span>
+            <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide">
+              {items.length} items
+            </span>
+            {pendingItems.length > 0 && (
+              <span className="rounded-full bg-[var(--amber)] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
+                {pendingItems.length} pendientes
+              </span>
+            )}
+            {sentItems.length > 0 && (
+              <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide">
+                {sentItems.length} enviados
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3 opacity-90">
@@ -317,20 +332,8 @@ export default function TicketPanel({
             Transcurrido: {elapsed}
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide">
-            {items.length} items
-          </span>
-          {pendingItems.length > 0 && (
-            <span className="rounded-full bg-[var(--amber)] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-white">
-              {pendingItems.length} pendientes
-            </span>
-          )}
-          {sentItems.length > 0 && (
-            <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide">
-              {sentItems.length} enviados
-            </span>
-          )}
+        {(compedItems.length > 0 || voidedItems.length > 0) && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
           {compedItems.length > 0 && (
             <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide">
               {compedItems.length} cortesias
@@ -341,7 +344,8 @@ export default function TicketPanel({
               {voidedItems.length} anulados
             </span>
           )}
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-2 bg-[var(--bg)]">
