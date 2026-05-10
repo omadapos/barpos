@@ -534,7 +534,7 @@ export default function OrderScreen({
         {/* Columna 1: Selección de Productos */}
         <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--bg-subtle)]">
           {/* Header del Panel */}
-          <div className="shrink-0 border-b border-[var(--border)] bg-white/50 px-6 py-4 backdrop-blur-md flex items-center justify-between">
+          <div className="flex min-h-[92px] shrink-0 items-center justify-between border-b border-[var(--border)] bg-white/50 px-6 py-4 backdrop-blur-md">
             <div className="flex items-center gap-4">
               <div>
                 <h1 className="text-2xl font-black text-[var(--text)] leading-tight tracking-tight">{headerTitle}</h1>
@@ -558,7 +558,7 @@ export default function OrderScreen({
 
         {/* Columna 2: Sidebar de Categorías (Glassmorphism) */}
         <div className="hidden lg:flex flex-col h-full overflow-hidden border-x border-[var(--border)] bg-white/30 backdrop-blur-xl">
-          <div className="shrink-0 p-5 border-b border-[var(--border)] bg-white/20">
+          <div className="flex min-h-[92px] shrink-0 items-center justify-center border-b border-[var(--border)] bg-white/50 px-5 py-4 backdrop-blur-md">
              <p className="text-[10px] font-black text-[var(--text2)] uppercase tracking-widest text-center">Categorías</p>
           </div>
           <div className="flex-1 overflow-y-auto scrollbar-none p-2">

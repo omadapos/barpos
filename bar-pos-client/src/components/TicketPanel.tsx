@@ -297,7 +297,7 @@ export default function TicketPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
-      <div className="shrink-0 bg-gradient-to-r from-[var(--green)] to-[var(--green3)] p-4 text-white shadow-lg">
+      <div className="flex min-h-[92px] shrink-0 flex-col justify-center bg-gradient-to-r from-[var(--green)] to-[var(--green3)] p-4 text-white shadow-lg">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <ReceiptText className="h-5 w-5 opacity-80" />
