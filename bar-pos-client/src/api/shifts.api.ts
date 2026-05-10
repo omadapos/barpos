@@ -13,6 +13,14 @@ export type ShiftSummary = {
   totalSales?: number;
   totalSold?: number;
   total?: number;
+  cashSales?: number;
+  totalCash?: number;
+  cashTotal?: number;
+  salesCash?: number;
+  cardSales?: number;
+  totalCard?: number;
+  cardTotal?: number;
+  salesCard?: number;
   orderCount?: number;
   totalOrders?: number;
   tips?: number;

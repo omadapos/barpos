@@ -54,6 +54,16 @@ export default function App() {
     }
   }, [token, queryClient, checkCurrentShift, clearShift]);
 
+  useEffect(() => {
+    if (!token) return undefined;
+    const onNoOpenShift = () => {
+      void checkCurrentShift();
+      setScreen('map');
+    };
+    window.addEventListener('barpos:no-open-shift', onNoOpenShift);
+    return () => window.removeEventListener('barpos:no-open-shift', onNoOpenShift);
+  }, [token, checkCurrentShift]);
+
   if (!token) {
     return (
       <div className="flex min-h-0 flex-1 flex-col">
@@ -156,7 +166,16 @@ export default function App() {
         {!shiftLoading && screen === 'reports' && <ReportsScreen />}
       </div>
       <OpenShiftModal open={!shiftLoading && !currentShift} />
-      <CloseShiftModal open={closeShiftOpen} onClose={() => setCloseShiftOpen(false)} />
+      <CloseShiftModal
+        open={closeShiftOpen}
+        onClose={() => setCloseShiftOpen(false)}
+        onClosed={() => {
+          setCloseShiftOpen(false);
+          setScreen('map');
+          setPrintRetryActive(false);
+          returnToTablesRef.current = null;
+        }}
+      />
     </div>
   );
 }

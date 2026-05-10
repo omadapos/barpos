@@ -57,9 +57,13 @@ api.interceptors.response.use(
       return Promise.reject(err);
     }
 
+    const raw = err.response?.data?.error ?? err.response?.data?.message;
+    const noOpenShift = raw === 'no_open_shift' || err.response?.data?.code === 'no_open_shift';
+    if (noOpenShift && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('barpos:no-open-shift'));
+    }
+
     if (!cfg?.skipErrorToast) {
-      const raw = err.response?.data?.error ?? err.response?.data?.message;
-      const noOpenShift = raw === 'no_open_shift' || err.response?.data?.code === 'no_open_shift';
       const msg =
         noOpenShift
           ? 'Debes abrir un turno antes de operar.'
