@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { LogOut, Printer, X, Wine } from 'lucide-react';
+import { LogOut, Printer, SquarePower, X, Wine } from 'lucide-react';
 import { useConnectionStore } from '@/store/useConnectionStore';
 import PrinterSettingsModal from '@/components/PrinterSettingsModal';
 import type { Shift } from '@/api/shifts.api';
@@ -157,6 +157,18 @@ export default function PosTopBar({
         </div>
 
         <div className="flex items-center gap-2 border-l border-[var(--border)] pl-4">
+          {shift && canCloseShift && (
+            <button
+              type="button"
+              onClick={onCloseShift}
+              className="flex h-10 items-center justify-center gap-2 rounded-xl border border-[var(--red)]/30 bg-[var(--red-pale)] px-3 text-xs font-black uppercase tracking-wide text-[var(--red)] shadow-sm transition-all hover:bg-[var(--red)] hover:text-white active:scale-90"
+              title="Cerrar turno"
+            >
+              <SquarePower className="h-4 w-4" />
+              <span className="hidden lg:inline">Cerrar turno</span>
+            </button>
+          )}
+
           {window.electronEnv?.printThermalReceipt && (
             <button
               type="button"
