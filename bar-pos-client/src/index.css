@@ -98,5 +98,10 @@ html, body {
   min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
-  background: linear-gradient(135deg, var(--green-dark), var(--green), var(--green2));
+  /* Fondo claro tipo “nube”: capas suaves + ligero tinte marca */
+  background:
+    radial-gradient(ellipse 140% 90% at 10% -10%, rgba(208, 237, 218, 0.55), transparent 52%),
+    radial-gradient(ellipse 120% 80% at 100% 0%, rgba(226, 232, 240, 0.45), transparent 48%),
+    radial-gradient(ellipse 100% 70% at 50% 110%, rgba(241, 245, 249, 0.9), transparent 55%),
+    linear-gradient(165deg, #ffffff 0%, var(--bg-subtle) 45%, #f8fafc 100%);
 }
