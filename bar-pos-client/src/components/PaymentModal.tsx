@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { X, CheckCircle2, Wallet, CreditCard, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, CreditCard, Wallet, X } from 'lucide-react';
 import { formatMoney } from '@/lib/format';
 
 type Props = {
@@ -74,6 +74,10 @@ export default function PaymentModal({
     });
   };
 
+  const setAmount = (value: number) => {
+    setAmountStr(String(Math.min(Math.max(0, Math.round(value)), 9_999_999)));
+  };
+
   const addQuick = (delta: number) => {
     setAmountStr((prev) => {
       const n = (parseInt(prev || '0', 10) || 0) + delta;
@@ -92,133 +96,194 @@ export default function PaymentModal({
 
   const cashOk = amountNumber >= totalInt;
   const numpadBtn =
-    'flex h-14 items-center justify-center rounded-xl border border-[var(--border)] bg-white text-xl font-bold text-[var(--text)] transition-all hover:bg-[var(--bg3)] active:scale-90';
+    'flex h-14 items-center justify-center rounded-xl border border-[var(--border)] bg-white text-xl font-black text-[var(--text)] shadow-sm shadow-black/5 transition-all hover:bg-[var(--green-pale)] active:scale-90';
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md" onClick={onClose}>
-      <div className="w-full max-w-md rounded-[2.5rem] bg-white p-8 shadow-2xl animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
-        <div className="mb-6 flex items-start justify-between">
+    <div
+      className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl rounded-[2rem] border border-white/70 bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-2xl font-black tracking-tight text-[var(--text)]">Finalizar Pago</h2>
-            <p className="text-sm font-bold text-[var(--text3)] uppercase tracking-widest">{tableLabel || 'Caja Rápida'}</p>
+            <h2 className="text-2xl font-black tracking-tight text-[var(--text)]">
+              Finalizar Pago
+            </h2>
+            <p className="text-sm font-bold uppercase tracking-widest text-[var(--text3)]">
+              {tableLabel || 'Caja Rapida'}
+            </p>
           </div>
-          <button onClick={onClose} className="rounded-full bg-[var(--bg3)] p-2 text-[var(--text2)] transition hover:bg-[var(--bg4)]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full bg-[var(--bg3)] p-2 text-[var(--text2)] transition hover:bg-[var(--bg4)]"
+          >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        <div className="mb-8 rounded-3xl bg-[var(--green-pale)] p-6 text-center">
-          <span className="text-xs font-black uppercase tracking-[0.2em] text-[var(--green-dark)] opacity-60">Total a Cobrar</span>
-          <div className="text-4xl font-black text-[var(--green)] font-mono">{formatMoney(totalNum)}</div>
+        <div className="mb-5 rounded-3xl bg-[var(--green-pale)] p-5 text-center">
+          <span className="text-xs font-black uppercase tracking-[0.2em] text-[var(--green-dark)] opacity-60">
+            Total a cobrar
+          </span>
+          <div className="font-mono text-4xl font-black text-[var(--green)]">
+            {formatMoney(totalNum)}
+          </div>
         </div>
 
         {!method && (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <button
+              type="button"
               onClick={() => setMethod('cash')}
-              className="flex h-20 items-center justify-between rounded-2xl bg-[var(--bg3)] px-6 transition-all hover:bg-[var(--green-dim)] group active:scale-95"
+              className="group flex h-20 items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--green-pale)]/60 px-5 transition-all hover:border-[var(--green)] hover:bg-[var(--green-pale)] active:scale-95"
             >
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm text-[var(--green)]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-[var(--green)] shadow-sm">
                   <Wallet className="h-6 w-6" />
                 </div>
                 <span className="text-lg font-black text-[var(--text)]">Efectivo</span>
               </div>
-              <div className="h-8 w-8 rounded-full border-2 border-[var(--border)] group-hover:border-[var(--green)] transition-colors" />
+              <div className="h-8 w-8 rounded-full border-2 border-[var(--border)] transition-colors group-hover:border-[var(--green)]" />
             </button>
             <button
+              type="button"
               onClick={() => setMethod('card')}
-              className="flex h-20 items-center justify-between rounded-2xl bg-[var(--bg3)] px-6 transition-all hover:bg-[var(--blue-pale)] group active:scale-95"
+              className="group flex h-20 items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--bg3)] px-5 transition-all hover:border-[var(--green)] hover:bg-[var(--green-pale)] active:scale-95"
             >
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm text-[var(--blue)]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-[var(--green)] shadow-sm">
                   <CreditCard className="h-6 w-6" />
                 </div>
                 <span className="text-lg font-black text-[var(--text)]">Tarjeta / Link</span>
               </div>
-              <div className="h-8 w-8 rounded-full border-2 border-[var(--border)] group-hover:border-[var(--blue)] transition-colors" />
+              <div className="h-8 w-8 rounded-full border-2 border-[var(--border)] transition-colors group-hover:border-[var(--green)]" />
             </button>
           </div>
         )}
 
         {method === 'card' && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 py-8 justify-center flex-col text-center">
-              <div className="h-20 w-20 rounded-full bg-[var(--blue-pale)] text-[var(--blue)] flex items-center justify-center">
-                <CreditCard className="h-10 w-10" />
+          <div className="space-y-5">
+            <div className="flex items-center gap-5 rounded-3xl border border-[var(--border)] bg-[var(--green-pale)]/60 p-5">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-[var(--green)] shadow-sm">
+                <CreditCard className="h-9 w-9" />
               </div>
-              <p className="text-sm font-bold text-[var(--text2)]">Procesa el pago en la terminal bancaria por <span className="text-[var(--text)]">{formatMoney(totalNum)}</span></p>
+              <p className="text-sm font-bold text-[var(--text2)]">
+                Procesa el pago en la terminal bancaria por{' '}
+                <span className="text-[var(--text)]">{formatMoney(totalNum)}</span>.
+              </p>
             </div>
-            <button
-              onClick={() => confirm('card')}
-              disabled={submitting}
-              className="btn-primary w-full py-5 text-xl rounded-2xl active:scale-95"
-            >
-              <CheckCircle2 className="h-6 w-6 mr-2" /> Confirmar Pago
-            </button>
-            <button onClick={() => setMethod(null)} className="w-full text-sm font-bold text-[var(--text3)] uppercase tracking-widest hover:text-[var(--text)] transition">
-              ← Cambiar método
-            </button>
+            <div className="grid gap-3 sm:grid-cols-[1fr_2fr]">
+              <button
+                type="button"
+                onClick={() => setMethod(null)}
+                className="min-h-[52px] rounded-2xl border border-[var(--border)] bg-white text-sm font-black uppercase tracking-widest text-[var(--text3)] transition hover:bg-[var(--bg3)]"
+              >
+                Cambiar
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirm('card')}
+                disabled={submitting}
+                className="btn-primary min-h-[52px] rounded-2xl text-lg active:scale-95 disabled:opacity-40"
+              >
+                <CheckCircle2 className="mr-2 h-6 w-6" /> Confirmar pago
+              </button>
+            </div>
           </div>
         )}
 
         {method === 'cash' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-2">
-               <button onClick={() => setMethod(null)} className="p-2 text-[var(--text3)] hover:text-[var(--text)] transition">
-                  <ArrowLeft className="h-6 w-6" />
-               </button>
-               <div className="flex-1 rounded-2xl bg-[var(--bg3)] p-4 text-right">
-                  <span className="text-[10px] font-black text-[var(--text3)] uppercase tracking-widest">Recibido</span>
-                  <div className="text-2xl font-black text-[var(--text)] font-mono">{formatDisplayAmount(amountStr)}</div>
-               </div>
-            </div>
-
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {[5, 10, 20, 50, 100].map(val => (
-                <button
-                  key={val}
-                  onClick={() => addQuick(val)}
-                  className="whitespace-nowrap rounded-full bg-[var(--green-dim)] px-4 py-2 text-xs font-black text-[var(--green)] transition hover:brightness-95 active:scale-90"
-                >
-                  +${val}
-                </button>
-              ))}
               <button
-                onClick={() => setAmountStr(String(totalInt))}
-                className="whitespace-nowrap rounded-full bg-[var(--text)] px-4 py-2 text-xs font-black text-white transition active:scale-90"
+                type="button"
+                onClick={() => setMethod(null)}
+                className="p-2 text-[var(--text3)] transition hover:text-[var(--text)]"
               >
-                Exacto
+                <ArrowLeft className="h-6 w-6" />
               </button>
+              <div className="flex-1 rounded-2xl bg-[var(--bg3)] p-3 text-right">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text3)]">
+                  Recibido
+                </span>
+                <div className="font-mono text-2xl font-black text-[var(--text)]">
+                  {formatDisplayAmount(amountStr)}
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '00', 'back'].map(k => (
-                <button
-                  key={k}
-                  onClick={() => k === 'back' ? handleKey('back') : handleKey(k)}
-                  className={`${numpadBtn} ${k === 'back' ? 'text-[var(--red)]' : ''}`}
+            <div className="grid gap-4 md:grid-cols-[1fr_260px]">
+              <div className="space-y-3">
+                <div className="rounded-2xl border border-[var(--border)] bg-[var(--green-pale)]/70 p-4">
+                  <span className="mb-3 block text-[10px] font-black uppercase tracking-[0.2em] text-[var(--green-dark)]/70">
+                    Recibido rapido
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAmount(totalInt)}
+                      className="min-h-[62px] rounded-2xl bg-[var(--green3)] px-2 text-base font-black uppercase tracking-wide text-white shadow-sm transition hover:bg-[var(--green2)] active:scale-95"
+                    >
+                      Exacto
+                    </button>
+                    {[5, 10, 20, 50, 100].map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => addQuick(val)}
+                        className="min-h-[62px] rounded-2xl border border-white/70 bg-white/85 px-2 text-2xl font-black text-[var(--green)] shadow-sm transition hover:bg-white active:scale-95"
+                      >
+                        +${val}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div
+                  className={`rounded-2xl p-4 text-center transition-all ${
+                    change >= 0
+                      ? 'border-2 border-[var(--green)]/20 bg-[var(--green-pale)]'
+                      : 'bg-[var(--red-pale)]'
+                  }`}
                 >
-                  {k === 'back' ? '⌫' : k}
-                </button>
-              ))}
-            </div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
+                    {change >= 0 ? 'Vuelto a entregar' : 'Monto faltante'}
+                  </span>
+                  <div
+                    className={`font-mono text-3xl font-black ${
+                      change >= 0 ? 'text-[var(--green)]' : 'text-[var(--red)]'
+                    }`}
+                  >
+                    {formatMoney(Math.abs(change))}
+                  </div>
+                </div>
+              </div>
 
-            <div className={`rounded-2xl p-4 text-center transition-all ${change >= 0 ? 'bg-[var(--green-pale)] border-2 border-[var(--green)]/20' : 'bg-[var(--red-pale)]'}`}>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
-                {change >= 0 ? 'Vuelto a entregar' : 'Monto faltante'}
-              </span>
-              <div className={`text-2xl font-black font-mono ${change >= 0 ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
-                {formatMoney(Math.abs(change))}
+              <div className="grid grid-cols-3 gap-2">
+                {['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '00', 'back'].map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => (k === 'back' ? handleKey('back') : handleKey(k))}
+                    className={`${numpadBtn} ${k === 'back' ? 'text-[var(--red)]' : ''}`}
+                  >
+                    {k === 'back' ? '⌫' : k}
+                  </button>
+                ))}
               </div>
             </div>
 
             <button
-              onClick={() => confirm('cash')}
+              type="button"
+              onClick={() => void confirm('cash')}
               disabled={!cashOk || submitting}
-              className="btn-primary w-full py-5 text-xl rounded-2xl active:scale-95 disabled:opacity-40 disabled:grayscale"
+              className="btn-primary min-h-[54px] w-full rounded-2xl text-xl active:scale-95 disabled:opacity-40 disabled:grayscale"
             >
-              <CheckCircle2 className="h-6 w-6 mr-2" /> Finalizar Venta
+              <CheckCircle2 className="mr-2 h-6 w-6" /> Finalizar venta
             </button>
           </div>
         )}
