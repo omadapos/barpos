@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
 import { formatMoney } from '@/lib/format';
+import { buildShiftClosePrintPayload } from '@/lib/buildShiftClosePrintPayload';
+import { loadThermalSettings, toElectronPrintConfig } from '@/lib/thermalPrinterConfig';
 import { useOrderStore } from '@/store/useOrderStore';
 import { useShiftStore } from '@/store/useShiftStore';
 import { useTableStore } from '@/store/useTableStore';
@@ -63,7 +65,7 @@ export default function CloseShiftModal({ open, onClose, onClosed }: Props) {
   const openOrderCount = Object.keys(openOrders).length;
   const hasOpenOrders = openOrderCount > 0;
 
-  const submit = async () => {
+  const submit = async (printAfterClose = false) => {
     if (hasOpenOrders) {
       toast.error('No puedes cerrar turno con ordenes abiertas');
       return;
@@ -79,10 +81,37 @@ export default function CloseShiftModal({ open, onClose, onClosed }: Props) {
     }
     setBusy(true);
     try {
-      await closeShift(amount, notes);
+      const shiftSnapshot = currentShift;
+      const fallbackSummary = summary;
+      const closeSummary = await closeShift(amount, notes);
       setCurrentOrder(null);
       await refreshTables();
-      toast.success('Turno cerrado');
+      if (printAfterClose) {
+        const printApi = window.electronEnv?.printThermalReceipt;
+        if (!printApi) {
+          toast.error('Turno cerrado, pero la impresion solo esta disponible en la app de escritorio');
+        } else {
+          const settings = loadThermalSettings();
+          const payload = buildShiftClosePrintPayload(
+            settings,
+            shiftSnapshot,
+            closeSummary ?? fallbackSummary,
+            amount,
+            notes
+          );
+          const result = await printApi({
+            config: toElectronPrintConfig(settings) as Record<string, unknown>,
+            payload: { ...payload } as Record<string, unknown>,
+          });
+          if (!result.ok) {
+            toast.error(result.error || 'Turno cerrado, pero no se pudo imprimir el cierre');
+          } else {
+            toast.success('Turno cerrado e impreso');
+          }
+        }
+      } else {
+        toast.success('Turno cerrado');
+      }
       onClosed?.();
       onClose();
     } catch {
@@ -190,18 +219,35 @@ export default function CloseShiftModal({ open, onClose, onClosed }: Props) {
           className="mb-5 min-h-20 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm font-semibold text-[var(--text)] outline-none focus:border-[var(--green)]"
         />
 
-        <button
-          type="button"
-          disabled={busy || hasOpenOrders}
-          onClick={() => void submit()}
-          className="h-12 w-full rounded-xl bg-[var(--red)] font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {busy
-            ? 'Cerrando...'
-            : confirmClose
-              ? 'Si, cerrar turno definitivamente'
-              : 'Confirmar cierre'}
-        </button>
+        {confirmClose && !hasOpenOrders ? (
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void submit(false)}
+              className="h-12 rounded-xl border border-[var(--border2)] bg-white font-black text-[var(--text)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {busy ? 'Cerrando...' : 'Cerrar'}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void submit(true)}
+              className="h-12 rounded-xl bg-[var(--red)] font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {busy ? 'Cerrando...' : 'Cerrar e imprimir'}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={busy || hasOpenOrders}
+            onClick={() => void submit(false)}
+            className="h-12 w-full rounded-xl bg-[var(--red)] font-black text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {busy ? 'Cerrando...' : 'Confirmar cierre'}
+          </button>
+        )}
         {confirmClose && !hasOpenOrders && (
           <p className="mt-3 text-center text-xs font-bold text-[var(--red)]">
             Esta accion cierra la caja actual. Para vender de nuevo tendras que abrir otro turno.

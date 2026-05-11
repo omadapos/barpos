@@ -6,6 +6,7 @@ const {
   printThermalReceipt,
   printThermalStationOrder,
   printThermalReport,
+  printThermalShiftClose,
   formatThermalPrintError,
 } = require('./print-ticket');
 
@@ -60,7 +61,9 @@ ipcMain.handle('thermal-print', async (_evt, data) => {
     }
     const config = JSON.parse(JSON.stringify(cfgIn));
     const payload = JSON.parse(JSON.stringify(payIn));
-    if (payload.documentKind === 'report') {
+    if (payload.documentKind === 'shift-close') {
+      await printThermalShiftClose(config, payload);
+    } else if (payload.documentKind === 'report') {
       await printThermalReport(config, payload);
     } else if (payload.documentKind === 'station') {
       await printThermalStationOrder(config, payload);

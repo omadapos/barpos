@@ -8,7 +8,7 @@ interface ShiftStore {
   checkCurrentShift: () => Promise<Shift | null>;
   openShift: (openingCash: number) => Promise<void>;
   loadSummary: () => Promise<ShiftSummary | null>;
-  closeShift: (closingCash: number, notes?: string) => Promise<void>;
+  closeShift: (closingCash: number, notes?: string) => Promise<ShiftSummary | null>;
   clearShift: () => void;
 }
 
@@ -43,8 +43,13 @@ export const useShiftStore = create<ShiftStore>((set, get) => ({
   },
 
   closeShift: async (closingCash, notes) => {
-    await shiftsApi.close({ closingCash, notes: notes?.trim() || undefined });
+    const result = await shiftsApi.close({ closingCash, notes: notes?.trim() || undefined });
+    const summary =
+      result && typeof result === 'object' && 'summary' in result
+        ? (result.summary as ShiftSummary | undefined) ?? null
+        : null;
     set({ currentShift: null, summary: null });
+    return summary;
   },
 
   clearShift: () => set({ currentShift: null, summary: null, loading: false }),

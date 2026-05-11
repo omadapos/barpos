@@ -531,10 +531,178 @@ async function printThermalReport(config, payload) {
   await printer.execute();
 }
 
+const MAX_SHIFT_CATEGORIES = 18;
+const MAX_SHIFT_PRODUCTS = 28;
+const MAX_SHIFT_ADJUSTMENTS = 16;
+
+/**
+ * Cierre de turno con cuadre de caja y ventas por grupo/producto.
+ * @param {object} config
+ * @param {object} payload - documentKind: 'shift-close', shift, totals, byCategory, byProduct, adjustments
+ */
+async function printThermalShiftClose(config, payload) {
+  const printer = createPrinter(config);
+  const lineW = Math.min(56, Math.max(32, Number(config.width) || 48));
+
+  printer.setTypeFontA();
+  printer.alignCenter();
+  const bizName = String(payload.businessName || 'Bar POS').trim() || 'Bar POS';
+  printer.bold(true);
+  if (bizName.length <= 22) {
+    printer.setTextDoubleHeight();
+    printer.println(bizName.slice(0, 24));
+    printer.setTextNormal();
+  } else {
+    printlnWrapped(printer, bizName, lineW);
+  }
+  printer.bold(false);
+  if (payload.businessAddress) {
+    printlnWrapped(printer, String(payload.businessAddress), lineW);
+  }
+  if (payload.businessPhone) {
+    printer.println(`Tel: ${String(payload.businessPhone).slice(0, 24)}`);
+  }
+  printer.newLine();
+
+  printer.bold(true);
+  printer.println('CIERRE DE TURNO');
+  printer.bold(false);
+  printer.drawLine();
+  printer.alignLeft();
+
+  const shift = payload.shift && typeof payload.shift === 'object' ? payload.shift : {};
+  if (shift.id) printer.println(`Turno #${shift.id}`);
+  if (shift.openedAt) printer.println(`Apertura: ${shift.openedAt}`);
+  if (shift.closedAt) printer.println(`Cierre:   ${shift.closedAt}`);
+  if (shift.openedBy) printer.println(`Abierto por: ${truncLabel(shift.openedBy, lineW - 13)}`);
+  if (shift.closedBy) printer.println(`Cerrado por: ${truncLabel(shift.closedBy, lineW - 13)}`);
+  printer.newLine();
+
+  const totals = payload.totals && typeof payload.totals === 'object' ? payload.totals : {};
+  printer.bold(true);
+  printer.println('CUADRE DE CAJA');
+  printer.bold(false);
+  printer.drawLine();
+  printer.leftRight('Efectivo inicial', money(shift.openingCash));
+  printer.leftRight('Ventas efectivo', money(totals.cashSales));
+  printer.leftRight('Ventas tarjeta', money(totals.cardSales));
+  printer.leftRight('Propinas', money(totals.tips));
+  printer.leftRight('Efectivo esperado', money(totals.expectedCash));
+  printer.leftRight('Efectivo contado', money(shift.closingCash));
+  printer.bold(true);
+  printer.leftRight('Diferencia', money(totals.cashDifference));
+  printer.bold(false);
+  printer.newLine();
+
+  printer.bold(true);
+  printer.println('RESUMEN');
+  printer.bold(false);
+  printer.drawLine();
+  printer.leftRight('Total vendido', money(totals.totalSales));
+  printer.leftRight('Ordenes', String(totals.orderCount ?? 0));
+  printer.leftRight('Items', String(totals.itemCount ?? 0));
+  if (Number(totals.tax) > 0) printer.leftRight('Impuestos', money(totals.tax));
+  printer.newLine();
+
+  const cats = Array.isArray(payload.byCategory) ? payload.byCategory : [];
+  if (cats.length) {
+    printer.drawLine();
+    printer.bold(true);
+    printer.println('VENTAS POR GRUPO');
+    printer.bold(false);
+    printer.drawLine();
+    const slice = cats.slice(0, MAX_SHIFT_CATEGORIES);
+    for (const c of slice) {
+      printer.leftRight(truncLabel(c.name, Math.min(26, lineW - 14)), money(c.netTotal));
+      printer.println(`   ${c.quantity ?? 0} uds.`);
+    }
+    if (cats.length > slice.length) {
+      printer.println(`... +${cats.length - slice.length} mas`);
+    }
+    printer.newLine();
+  }
+
+  const prods = Array.isArray(payload.byProduct) ? payload.byProduct : [];
+  if (prods.length) {
+    printer.drawLine();
+    printer.bold(true);
+    printer.println('VENTAS POR PRODUCTO');
+    printer.bold(false);
+    printer.drawLine();
+    const slice = prods.slice(0, MAX_SHIFT_PRODUCTS);
+    for (const p of slice) {
+      printer.bold(true);
+      printer.println(truncLabel(p.name, lineW - 2));
+      printer.bold(false);
+      printer.leftRight(`  ${p.quantity ?? 0} uds.`, money(p.netTotal));
+    }
+    if (prods.length > slice.length) {
+      printer.println(`... +${prods.length - slice.length} mas`);
+    }
+    printer.newLine();
+  }
+
+  const adjustments = payload.adjustments && typeof payload.adjustments === 'object'
+    ? payload.adjustments
+    : {};
+  const voided = Array.isArray(adjustments.voidedItems) ? adjustments.voidedItems : [];
+  const comped = Array.isArray(adjustments.compedItems) ? adjustments.compedItems : [];
+  if (voided.length || comped.length) {
+    printer.drawLine();
+    printer.bold(true);
+    printer.println('AJUSTES');
+    printer.bold(false);
+    printer.drawLine();
+    for (const v of voided.slice(0, MAX_SHIFT_ADJUSTMENTS)) {
+      printer.println(`ANULADO: ${truncLabel(v.name, lineW - 10)}`);
+      printer.leftRight(`  ${v.quantity ?? 0} uds.`, money(v.amount));
+      if (v.reason) printlnWrapped(printer, `  ${String(v.reason)}`, lineW);
+    }
+    for (const c of comped.slice(0, MAX_SHIFT_ADJUSTMENTS)) {
+      printer.println(`CORTESIA: ${truncLabel(c.name, lineW - 11)}`);
+      printer.leftRight(`  ${c.quantity ?? 0} uds.`, money(c.amount));
+      if (c.reason) printlnWrapped(printer, `  ${String(c.reason)}`, lineW);
+    }
+    printer.newLine();
+  }
+
+  if (shift.notes) {
+    printer.drawLine();
+    printer.println('NOTAS');
+    printlnWrapped(printer, String(shift.notes).slice(0, 240), lineW);
+    printer.newLine();
+  }
+
+  const thanks = String(payload.footerThanks || '').trim();
+  if (thanks) {
+    printer.alignCenter();
+    printlnWrapped(printer, thanks, lineW);
+    printer.alignLeft();
+  }
+  printer.newLine();
+  printer.newLine();
+
+  printer.setTextNormal();
+  printer.bold(false);
+
+  try {
+    printer.partialCut();
+  } catch {
+    try {
+      printer.cut();
+    } catch {
+      /* sin cortador */
+    }
+  }
+
+  await printer.execute();
+}
+
 module.exports = {
   printThermalReceipt,
   printThermalStationOrder,
   printThermalReport,
+  printThermalShiftClose,
   resolveInterface,
   formatThermalPrintError,
 };
