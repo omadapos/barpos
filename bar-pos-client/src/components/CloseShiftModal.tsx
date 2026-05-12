@@ -62,7 +62,11 @@ export default function CloseShiftModal({ open, onClose, onClosed }: Props) {
   const countedCash = num(closingCash);
   const expectedCash = openingCash + cashSales;
   const cashDifference = countedCash - expectedCash;
-  const openOrderCount = Object.keys(openOrders).length;
+  const openOrderCount = Object.values(openOrders).filter((order) => {
+    const itemCount = num(order.itemCount);
+    const total = num(order.total);
+    return itemCount > 0 || total > 0;
+  }).length;
   const hasOpenOrders = openOrderCount > 0;
 
   const submit = async (printAfterClose = false) => {
